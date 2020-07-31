@@ -159,7 +159,7 @@ void HelloWorld( const char* pszFilename )
 		 *
 		 */
 		painter.DrawText( 56.69, pPage->GetPageSize().GetHeight() - 56.69, "Hello World!" );
-		painter.DrawGlyph();
+		//painter.DrawGlyph();
 
 		/*
 		 * Tell PoDoFo that the page has been drawn completely.
