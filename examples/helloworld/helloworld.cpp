@@ -199,8 +199,43 @@ void HelloWorld( const char* pszFilename )
 	}
 }
 
+int MergeDoc(const char *firstFile, const char *secondFile, const char *doc)
+{
+	PdfMemDocument docFirst(firstFile);
+	PdfMemDocument docSecond(secondFile);
+
+	docFirst.DumpInfo();
+
+	docFirst.Append(docSecond);
+
+	PdfOutlines* bMarks = docFirst.GetOutlines();
+	PdfOutlineItem*	bmRoot = bMarks->CreateRoot(doc);
+
+	PdfDestination	p1Dest(docFirst.GetPage(0));
+	docFirst.AddNamedDestination(p1Dest, firstFile);
+	PdfOutlineItem* child1 = bmRoot->CreateChild(firstFile, p1Dest );
+
+	PdfDestination	p2Dest(docFirst.GetPage(docFirst.GetPageCount() - 1));
+	docFirst.AddNamedDestination( p2Dest, secondFile);
+	child1->CreateNext(secondFile, p2Dest );
+	
+#ifdef TEST_FULL_SCREEN
+	input1.SetUseFullScreen();
+#else
+	docFirst.SetPageMode(ePdfPageModeUseBookmarks);
+	docFirst.SetHideToolbar();
+	docFirst.SetPageLayout(ePdfPageLayoutTwoColumnLeft);
+#endif
+
+	docFirst.Write(doc);
+	return 0;
+}
+
 int main( int argc, char* argv[] )
 {
+	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
+	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
+	MergeDoc("two-with-bookmarks.pdf", "two-with-bookmarks.pdf", "multi-with-bookmarks.pdf");
     /*
      * Check if a filename was passed as commandline argument.
      * If more than 1 argument or no argument is passed,
