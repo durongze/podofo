@@ -96,6 +96,15 @@ PdfDocument::PdfDocument(bool bEmpty)
     }
 }
 
+void PdfDocument::DumpInfo()
+{
+	LogInfo("\n");
+	m_vecObjects.DumpInfo();
+
+	if (m_pOutlines) { m_pOutlines->DumpInfo(this); }
+	if (m_pNamesTree) { m_pNamesTree->DumpInfo(); }
+}
+
 PdfDocument::~PdfDocument()
 {
     this->Clear();

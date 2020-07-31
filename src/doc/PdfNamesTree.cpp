@@ -332,6 +332,17 @@ bool PdfNameTreeNode::Rebalance()
 
 ///////////////////////////////////////////////////////////////////////
 
+void PdfNamesTree::DumpInfo()
+{
+	PdfObject* pObject = this->GetRootNode("Dests");
+	PdfObject* pResult = NULL;
+
+	if (pObject)
+	{
+		
+	}
+}
+
 /*
   We use NULL for the PdfElement name, since the NamesTree dict
   does NOT have a /Type key!

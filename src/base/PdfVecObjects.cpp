@@ -105,6 +105,16 @@ PdfVecObjects::PdfVecObjects()
 {
 }
 
+void PdfVecObjects::DumpInfo()
+{
+	TIVecObjects iter;
+	int idx = 0;
+	for (iter = begin(); iter != end(); iter++)
+	{
+		LogInfo("idx : %d\n", idx++);
+	}
+}
+
 PdfVecObjects::~PdfVecObjects()
 {
     this->Clear();

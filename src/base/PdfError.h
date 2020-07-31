@@ -565,6 +565,8 @@ bool PdfError::IsError() const
 }
 
 };
+// PdfError::LogMessage(eLogSeverity_Information, __FUNCTION__);
+#define LogInfo(fmt, ...) PdfError::LogMessage(eLogSeverity_Information, " [%s:%d] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #endif /* _PDF_ERROR_H_ */
 

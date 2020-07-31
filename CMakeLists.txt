@@ -44,7 +44,7 @@ SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 # If users try to use something else the results can be confusing. We set a
 # variable here that we require to be set elsewhere, otherwise we'll complain.
 SET(PODOFO_MAIN_CMAKELISTS_READ TRUE)
-
+SET(PODOFO_BUILD_STATIC TRUE)
 # If the user hasn't told use specifically what they want, build only
 # a static library or only a shared library on Windows.
 IF(NOT DEFINED PODOFO_BUILD_SHARED AND NOT DEFINED PODOFO_BUILD_STATIC)

@@ -79,6 +79,7 @@ class PODOFO_DOC_API PdfDocument {
     friend class PdfElement;
 
  public:
+	 void DumpInfo();
     /** Close down/destruct the PdfDocument
      */
     virtual ~PdfDocument();

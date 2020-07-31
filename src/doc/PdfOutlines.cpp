@@ -104,6 +104,20 @@ PdfOutlineItem::PdfOutlineItem( PdfVecObjects* pParent )
 {
 }
 
+void PdfOutlineItem::DumpInfo(PdfDocument* pDoc)
+{
+	PdfDestination *dest = GetDestination(pDoc);
+	int idx = 0;
+	if (dest) { 
+		LogInfo("dest:%d\n", idx++);
+		dest->GetDValue(); 
+	}
+	PdfAction *act = GetAction();
+	if (act) {
+		act->DumpInfo();
+	}
+}
+
 PdfOutlineItem::~PdfOutlineItem()
 {
     delete m_pNext;
@@ -390,6 +404,17 @@ double PdfOutlineItem::GetTextColorBlue() const
 ///////////////////////////////////////////////////////////////////////////////////
 // PdfOutlines
 ///////////////////////////////////////////////////////////////////////////////////
+
+void PdfOutlines::DumpInfo(PdfDocument* pDoc)
+{
+	PdfOutlineItem * iter = NULL;
+	int idx = 0;
+	for (iter = First(); iter != NULL; iter = iter->Next())
+	{
+		LogInfo("lineItem:%d\n", idx++);
+		iter->DumpInfo(pDoc);
+	}
+}
 
 PdfOutlines::PdfOutlines( PdfVecObjects* pParent )
     : PdfOutlineItem( pParent )
