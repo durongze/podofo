@@ -199,6 +199,29 @@ void HelloWorld( const char* pszFilename )
 	}
 }
 
+inline wchar_t* AnsiToUnicode(const char* szStr)
+{
+	int nLen = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, NULL, 0);
+	if (nLen == 0)
+	{
+		return NULL;
+	}
+	wchar_t* pResult = new wchar_t[nLen];
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, pResult, nLen);
+	return pResult;
+}
+
+inline char* UnicodeToAnsi(const wchar_t* szStr)
+{
+	int nLen = WideCharToMultiByte(CP_ACP, 0, szStr, -1, NULL, 0, NULL, NULL);
+	if (nLen == 0)
+	{
+		return NULL;
+	}
+	char* pResult = new char[nLen];
+	WideCharToMultiByte(CP_ACP, 0, szStr, -1, pResult, nLen, NULL, NULL);
+	return pResult;
+}
 
 void ShowOutLines(PdfMemDocument *mDoc, std::ostream& sOutStream, PoDoFo::PdfOutlineItem* pItem, int level)
 {
@@ -278,42 +301,106 @@ int ShowDoc(PdfMemDocument *pdfDoc)
 	return 0;
 }
 
-int InitBookMark(PdfMemDocument&doc, PdfOutlineItem*& bmRoot, PdfOutlineItem*& bmItem,
-	TiXmlElement*& xmlRoot, TiXmlElement*& xmlItem, const char*& itemText, const char*& itemHref)
+int AddBookMarkBy(PdfMemDocument &doc, PdfOutlineItem*& bmRoot,
+	TiXmlElement*& xmlRoot);
+
+typedef struct {
+	PdfString *str;
+	PdfDestination *dest;
+} PdfDestStr;
+
+void FreeDestStr(PdfDestStr *dstStr)
 {
-	int pNo = 0;
-	TiXmlElement *xmlItemA = xmlRoot->FirstChildElement();
+	if (dstStr) {
+		if (dstStr->str) { delete dstStr->str; }
+		if (dstStr->dest) { delete dstStr->dest; }
+		delete dstStr;
+	}
+}
 
-	xmlItem = xmlRoot->NextSiblingElement();
-
+PdfDestStr *CreateDestStr(PdfMemDocument&doc, TiXmlElement *xmlItem)
+{
+	PdfDestStr *dstStr = new PdfDestStr();
+	TiXmlElement *xmlItemA = xmlItem->FirstChildElement();
+	const char *itemText = NULL;
+	const char *itemHref = NULL;
 	itemHref = xmlItemA->Attribute("href");
 	itemText = xmlItemA->GetText();
-	PdfString strText(itemText);
+	if (itemText == NULL) {
+		return NULL;
+	}
+	wchar_t* pStr = AnsiToUnicode(itemText);
+	dstStr->str = new PdfString(pStr);
+	delete[] pStr;
 
-	PdfDestination	dest(doc.GetPage(pNo));
-	doc.AddNamedDestination(dest, strText);
-	bmItem = bmRoot->CreateChild(strText, dest);
+	int pNo = 0;
+	dstStr->dest = new PdfDestination(doc.GetPage(pNo));
+	doc.AddNamedDestination(*(dstStr->dest), *(dstStr->str));
+
+	return dstStr;
+}
+
+int InitBookMark(PdfMemDocument&doc, PdfOutlineItem*& bmRoot, PdfOutlineItem*& bmItem,
+	TiXmlElement*& xmlRoot, TiXmlElement*& xmlItem)
+{
+	if (xmlRoot == NULL) {
+		bmItem = NULL;
+		xmlItem = NULL;
+		return -1;
+	}
+	TiXmlElement *xmlItemA = xmlRoot;
+	PdfDestStr *dstStr = CreateDestStr(doc, xmlItemA);
+	if (dstStr == NULL) {
+		xmlItem = NULL;
+		return -1;
+	}
+	bmItem = bmRoot->CreateChild(*(dstStr->str), *(dstStr->dest));
+	xmlItem = xmlItemA->NextSiblingElement();
+	FreeDestStr(dstStr);
 	return 0;
 }
 
 int IncreaseBookMark(PdfMemDocument&doc, PdfOutlineItem*& bmItem,
-	TiXmlElement*& xmlItem, const char*& itemText, const char*& itemHref)
+	TiXmlElement*& xmlItem)
 {
-	int pNo = 0;
-	TiXmlElement *xmlItemA = xmlItem->FirstChildElement();
-	
+	if (bmItem == NULL || xmlItem == NULL) {
+		return -1;
+	}
+	TiXmlElement *xmlItemA = xmlItem;
+	PdfDestStr *dstStr = CreateDestStr(doc, xmlItemA);
+	if (dstStr == NULL) {
+		xmlItem = NULL;
+		return -1;
+	}
+	TiXmlElement *xmlSubItem = NULL;
+	xmlSubItem = xmlItemA->FirstChildElement();
+	if (xmlSubItem) {
+		xmlSubItem = xmlSubItem->NextSiblingElement();
+		AddBookMarkBy(doc, bmItem, xmlSubItem);
+	}
+	bmItem = bmItem->CreateNext(*(dstStr->str), *(dstStr->dest));
 	xmlItem = xmlItem->NextSiblingElement();
+	FreeDestStr(dstStr);
+	return 0;
+}
 
-	itemHref = xmlItemA->Attribute("href");
-	itemText = xmlItemA->GetText();
-	PdfString strText(itemText);
-
-	pNo = doc.GetPageCount() - 1;
-
-	PdfDestination	dest(doc.GetPage(pNo));
-	doc.AddNamedDestination(dest, strText);
-	bmItem = bmItem->CreateNext(strText, dest);
-
+int AddBookMarkBy(PdfMemDocument &doc, PdfOutlineItem*& bmRoot,
+	TiXmlElement*& xmlRoot)
+{
+	if (bmRoot == NULL || xmlRoot == NULL) {
+		return -1;
+	}
+	PdfOutlineItem* bmItem = NULL;
+	TiXmlElement *xmlItem = NULL;
+	for (InitBookMark(doc, bmRoot, bmItem, xmlRoot, xmlItem);
+		bmItem != NULL && xmlItem != NULL;
+		IncreaseBookMark(doc, bmItem, xmlItem)) {
+		const char *itemText = NULL;
+		const char *itemHref = NULL;
+		itemHref = xmlItem->Attribute("href");
+		itemText = xmlItem->GetText();
+		LogInfo("Text:%s\n", itemText);
+	}
 	return 0;
 }
 
@@ -337,13 +424,7 @@ int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 		LogInfo("%s\n", xmlRoot->GetText());
 	}
 	
-	PdfOutlineItem* bmItem = NULL;
-	TiXmlElement *xmlItem = NULL;
-	const char *itemText = NULL;
-	const char *itemHref = NULL;
-	for (InitBookMark(docFirst, bmRoot, bmItem, xmlRoot, xmlItem, itemText, itemHref);
-		itemHref != NULL && itemText != NULL && bmItem != NULL && xmlItem != NULL;
-		IncreaseBookMark(docFirst, bmItem, xmlItem, itemText, itemHref)) { }
+	AddBookMarkBy(docFirst, bmRoot, xmlRoot);
 
 	return 0;
 }
@@ -373,10 +454,11 @@ int MergeDoc(const char *firstFile, const char *secondFile, const char *doc, con
 
 int main( int argc, char* argv[] )
 {
+	SetConsoleOutputCP(CP_WINUNICODE);
 	PdfMemDocument doc("english.pdf");
 	AddBookMark(doc, "bookmark.xml");
 	doc.Write("xxx.pdf");
-	// SetConsoleOutputCP(i);
+
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
 	//MergeDoc("two-with-bookmarks.pdf", "two-with-bookmarks.pdf", "multi-with-bookmarks.pdf", "bookmark.xml");
