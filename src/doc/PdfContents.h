@@ -47,7 +47,7 @@ class PdfPage;
  */
 class PODOFO_DOC_API PdfContents : private PdfElement {
  public:
-
+	 void DumpInfo();
     /** Construct a new/empty set of contents in the owning objects
      */
     PdfContents( PdfDocument* pParent );

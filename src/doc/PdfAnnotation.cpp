@@ -85,7 +85,7 @@ void PdfAnnotation::DumpInfo()
 	EPdfAction actType;
 	LogInfo("title:%s\n",GetTitle().GetStringUtf8());
 	// this->GetDestination();
-	LogInfo("title:%s\n", GetContents().GetStringUtf8());
+	LogInfo("Contents:%s\n", GetContents().GetStringUtf8());
 	if (HasAction()) {
 		act = GetAction();
 		actType = act->GetType();

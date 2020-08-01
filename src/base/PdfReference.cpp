@@ -39,6 +39,11 @@
 #include <sstream>
 
 namespace PoDoFo {
+void PdfReference::DumpInfo()
+{
+	LogInfo("ObjectNo:%d\n", m_nObjectNo);
+	LogInfo("GenerationNo:%d\n", m_nGenerationNo);
+}
 
 void PdfReference::Write( PdfOutputDevice* pDevice, EPdfWriteMode eWriteMode, const PdfEncrypt* ) const
 {

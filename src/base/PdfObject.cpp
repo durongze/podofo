@@ -53,6 +53,7 @@ namespace PoDoFo {
 
 void PdfObject::DumpInfo()
 {
+	m_reference.DumpInfo();
 	if (IsArray()) {
 		PdfArray& a = GetArray();
 		for (PdfArray::iterator it = a.begin(); it != a.end(); ++it) {
@@ -66,9 +67,10 @@ void PdfObject::DumpInfo()
 			LogInfo("%s\n", "GetOwner()->GetObject((*it).GetReference())");
 		}
 	} else if (HasStream()) {
-		LogInfo("pContents");
+		LogInfo("Stream");
 	} else if (IsDictionary()) {
-		LogInfo("pContents");
+		LogInfo("IsDictionary");
+		GetDictionary().DumpInfo();
 		PdfError::LogMessage(eLogSeverity_Information,	" without stream => empty page");
 		// OC 18.09.2010 BugFix: Found an empty page in a PDF document:
 		//    103 0 obj

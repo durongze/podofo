@@ -59,6 +59,8 @@ void PdfPage::DumpInfo()
 			annot->DumpInfo();
 		}
 	}
+	m_pResources->DumpInfo();
+	m_pContents->DumpInfo();
 }
 
 PdfPage::PdfPage( const PdfRect & rSize, PdfDocument* pParent )

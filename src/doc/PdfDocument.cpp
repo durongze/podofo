@@ -108,7 +108,9 @@ void PdfDocument::DumpCataLog(int pNo)
 void PdfDocument::DumpInfo()
 {
 	LogInfo("\n");
-	DumpCataLog(14);
+	if (GetPageCount() > 14) {
+		DumpCataLog(14);
+	}
 	// m_vecObjects.DumpInfo();
 
 	if (GetOutlines()) {

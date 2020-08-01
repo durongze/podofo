@@ -105,7 +105,7 @@ PdfOutlineItem::PdfOutlineItem( PdfVecObjects* pParent )
 
 void PdfOutlineItem::DumpInfo(PdfDocument* pDoc)
 {
-	LogInfo("Title:%s\n", GetTitle().GetString());
+	LogInfo("Title:%s\n", GetTitle().GetStringUtf8());
 	PdfDestination *dest = GetDestination(pDoc);
 	if (dest) { 
 		dest->DumpInfo(pDoc);

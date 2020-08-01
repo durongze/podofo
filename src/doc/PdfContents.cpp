@@ -45,7 +45,13 @@
 #include <iostream>
 
 namespace PoDoFo {
-
+void PdfContents::DumpInfo()
+{
+	PdfObject *obj = GetObject();
+	if (obj) {
+		obj->DumpInfo();
+	}
+}
 PdfContents::PdfContents( PdfDocument* pParent )
     : PdfElement( NULL, pParent )
 {
