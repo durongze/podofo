@@ -34,7 +34,7 @@
  * the required headers on your own.
  */
 #include <podofo/podofo.h>
-
+#include "tinyxml.h"
 /*
  * All podofo classes are member of the PoDoFo namespace.
  */
@@ -199,7 +199,113 @@ void HelloWorld( const char* pszFilename )
 	}
 }
 
-int MergeDoc(const char *firstFile, const char *secondFile, const char *doc)
+
+void ShowOutLines(PdfMemDocument *mDoc, std::ostream& sOutStream, PoDoFo::PdfOutlineItem* pItem, int level)
+{
+	PoDoFo::PdfOutlines* pOutlines;
+	int          i;
+
+	if (!pItem)	{
+		pOutlines = mDoc->GetOutlines(PoDoFo::ePdfDontCreateObject);
+		if (!pOutlines || !pOutlines->First()) {
+			sOutStream << "\tNone Found" << std::endl;
+			return;
+		}
+		pItem = pOutlines->First();
+	}
+
+	for (i = 0; i<level; i++)
+		sOutStream << "-";
+
+	sOutStream << ">" << pItem->GetTitle().GetString();
+	PoDoFo::PdfDestination* pDest = pItem->GetDestination(mDoc);
+	if (pDest) {   // then it's a destination
+
+		PoDoFo::PdfPage* pPage = pDest->GetPage(mDoc);
+		if (pPage)
+			sOutStream << "\tDestination: Page #" << pPage->GetPageNumber();
+		else
+			sOutStream << "\tDestination: Page #" << "???";
+
+	}
+	else {
+		// then it's one or more actions
+		sOutStream << "\tAction: " << "???";
+		PdfAction* action = pItem->GetAction();
+		PdfObject *object = action->GetObject();
+		PdfDictionary dictionary = object->GetDictionary();
+		//Getting Access violation error.
+		if (dictionary.HasKey(PdfName("D")))
+		{
+
+		}
+	}
+	sOutStream << std::endl;
+
+	if (pItem->First())
+		ShowOutLines(mDoc, sOutStream, pItem->First(), level + 1);
+
+	if (pItem->Next())
+		ShowOutLines(mDoc, sOutStream, pItem->Next(), level);
+}
+
+
+int ShowDoc(PdfMemDocument *pdfDoc)
+{
+	PdfOutlines* outlines = pdfDoc->GetOutlines();
+	PdfOutlineItem* outline = outlines->First();
+	for (outline = outlines->First(); outline != NULL; outline = outline->Next())
+	{
+		PdfString title = outline->GetTitle();
+		PdfDestination* des = outline->GetDestination(pdfDoc);
+		if (des != NULL) {
+			PdfPage* page = des->GetPage(&pdfDoc->GetObjects());
+			if (page != NULL)
+				int pageNo = page->GetPageNumber();
+		} else {
+			PdfAction* action = outline->GetAction();
+			EPdfAction actionType = (EPdfAction)action->GetType();
+			PdfObject *object = action->GetObject();
+			PdfDictionary dictionary = object->GetDictionary();
+			if (action->HasScript()) {
+				PdfString script = action->GetScript();
+			}
+			if (action->HasURI()) {
+				PdfString s = action->GetURI();
+			}
+		}
+	}
+	return 0;
+}
+
+int AddBookMark(PdfMemDocument &docFirst, const char *bm)
+{
+	const char *curBm = NULL;
+	TiXmlDocument xmlBm;
+	
+	xmlBm.LoadFile(bm);
+
+	TiXmlElement *xmlRoot = xmlBm.FirstChildElement();
+	TiXmlElement *xmlBookName = xmlRoot->FirstChildElement();
+	curBm = xmlBookName->GetText();
+	PdfOutlines* bMarks = docFirst.GetOutlines();
+	PdfOutlineItem*	bmRoot = bMarks->CreateRoot(curBm);
+
+	TiXmlElement *xmlBookAttr = xmlBookName->NextSiblingElement();
+	curBm = xmlBookAttr->GetText();
+	PdfDestination	p1Dest(docFirst.GetPage(0));
+	docFirst.AddNamedDestination(p1Dest, curBm);
+	PdfOutlineItem* child1 = bmRoot->CreateChild(curBm, p1Dest);
+
+	TiXmlElement *xmlBookSn = xmlBookAttr->NextSiblingElement();
+	curBm = xmlBookSn->GetText();
+	PdfDestination	p2Dest(docFirst.GetPage(docFirst.GetPageCount()));
+	docFirst.AddNamedDestination(p2Dest, curBm);
+	child1->CreateNext(curBm, p2Dest);
+	return 0;
+}
+
+int MergeDoc(const char *firstFile, const char *secondFile, const char *doc, const char *bm)
 {
 	PdfMemDocument docFirst(firstFile);
 	PdfMemDocument docSecond(secondFile);
@@ -208,17 +314,8 @@ int MergeDoc(const char *firstFile, const char *secondFile, const char *doc)
 
 	docFirst.Append(docSecond);
 
-	PdfOutlines* bMarks = docFirst.GetOutlines();
-	PdfOutlineItem*	bmRoot = bMarks->CreateRoot(doc);
+	AddBookMark(docFirst, bm);
 
-	PdfDestination	p1Dest(docFirst.GetPage(0));
-	docFirst.AddNamedDestination(p1Dest, firstFile);
-	PdfOutlineItem* child1 = bmRoot->CreateChild(firstFile, p1Dest );
-
-	PdfDestination	p2Dest(docFirst.GetPage(docFirst.GetPageCount() - 1));
-	docFirst.AddNamedDestination( p2Dest, secondFile);
-	child1->CreateNext(secondFile, p2Dest );
-	
 #ifdef TEST_FULL_SCREEN
 	input1.SetUseFullScreen();
 #else
@@ -233,9 +330,13 @@ int MergeDoc(const char *firstFile, const char *secondFile, const char *doc)
 
 int main( int argc, char* argv[] )
 {
-	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
-	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
-	MergeDoc("two-with-bookmarks.pdf", "two-with-bookmarks.pdf", "multi-with-bookmarks.pdf");
+	for (int i = 0; i < 1; i++) {
+		// SetConsoleOutputCP(i);
+		// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
+		// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
+		MergeDoc("two-with-bookmarks.pdf", "two-with-bookmarks.pdf", "multi-with-bookmarks.pdf", "bookmark.xml");
+		std::cout << i << std::endl;
+	}
     /*
      * Check if a filename was passed as commandline argument.
      * If more than 1 argument or no argument is passed,

@@ -9,7 +9,7 @@
 # Note that you don't need the headers for PoDoFo's dependencies in your
 # header search path.
 
-ADD_EXECUTABLE(helloworld helloworld.cpp)
+ADD_EXECUTABLE(helloworld helloworld.cpp tinystr.cpp tinyxml.cpp tinyxmlerror.cpp tinyxmlparser.cpp)
 
 TARGET_LINK_LIBRARIES(helloworld ${PODOFO_LIB})
 SET_TARGET_PROPERTIES(helloworld PROPERTIES COMPILE_FLAGS "${PODOFO_CFLAGS}")
