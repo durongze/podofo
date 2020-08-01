@@ -372,13 +372,15 @@ int IncreaseBookMark(PdfMemDocument&doc, PdfOutlineItem*& bmItem,
 		xmlItem = NULL;
 		return -1;
 	}
+	bmItem = bmItem->CreateNext(*(dstStr->str), *(dstStr->dest));
+
 	TiXmlElement *xmlSubItem = NULL;
 	xmlSubItem = xmlItemA->FirstChildElement();
 	if (xmlSubItem) {
 		xmlSubItem = xmlSubItem->NextSiblingElement();
 		AddBookMarkBy(doc, bmItem, xmlSubItem);
 	}
-	bmItem = bmItem->CreateNext(*(dstStr->str), *(dstStr->dest));
+
 	xmlItem = xmlItem->NextSiblingElement();
 	FreeDestStr(dstStr);
 	return 0;
