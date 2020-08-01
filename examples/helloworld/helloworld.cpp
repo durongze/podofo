@@ -278,30 +278,72 @@ int ShowDoc(PdfMemDocument *pdfDoc)
 	return 0;
 }
 
+int InitBookMark(PdfMemDocument&doc, PdfOutlineItem*& bmRoot, PdfOutlineItem*& bmItem,
+	TiXmlElement*& xmlRoot, TiXmlElement*& xmlItem, const char*& itemText, const char*& itemHref)
+{
+	int pNo = 0;
+	TiXmlElement *xmlItemA = xmlRoot->FirstChildElement();
+
+	xmlItem = xmlRoot->NextSiblingElement();
+
+	itemHref = xmlItemA->Attribute("href");
+	itemText = xmlItemA->GetText();
+	PdfString strText(itemText);
+
+	PdfDestination	dest(doc.GetPage(pNo));
+	doc.AddNamedDestination(dest, strText);
+	bmItem = bmRoot->CreateChild(strText, dest);
+	return 0;
+}
+
+int IncreaseBookMark(PdfMemDocument&doc, PdfOutlineItem*& bmItem,
+	TiXmlElement*& xmlItem, const char*& itemText, const char*& itemHref)
+{
+	int pNo = 0;
+	TiXmlElement *xmlItemA = xmlItem->FirstChildElement();
+	
+	xmlItem = xmlItem->NextSiblingElement();
+
+	itemHref = xmlItemA->Attribute("href");
+	itemText = xmlItemA->GetText();
+	PdfString strText(itemText);
+
+	pNo = doc.GetPageCount() - 1;
+
+	PdfDestination	dest(doc.GetPage(pNo));
+	doc.AddNamedDestination(dest, strText);
+	bmItem = bmItem->CreateNext(strText, dest);
+
+	return 0;
+}
+
 int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 {
-	const char *curBm = NULL;
+	const char *xmlBookHref = NULL;
 	TiXmlDocument xmlBm;
 	
 	xmlBm.LoadFile(bm);
+	TiXmlElement *xmlHtml = xmlBm.FirstChildElement("html");
+	TiXmlElement *xmlBody = xmlHtml->FirstChildElement("body");
 
-	TiXmlElement *xmlRoot = xmlBm.FirstChildElement();
-	TiXmlElement *xmlBookName = xmlRoot->FirstChildElement();
-	curBm = xmlBookName->GetText();
 	PdfOutlines* bMarks = docFirst.GetOutlines();
-	PdfOutlineItem*	bmRoot = bMarks->CreateRoot(curBm);
+	PdfOutlineItem*	bmRoot = bMarks->CreateRoot(bm);
 
-	TiXmlElement *xmlBookAttr = xmlBookName->NextSiblingElement();
-	curBm = xmlBookAttr->GetText();
-	PdfDestination	p1Dest(docFirst.GetPage(0));
-	docFirst.AddNamedDestination(p1Dest, curBm);
-	PdfOutlineItem* child1 = bmRoot->CreateChild(curBm, p1Dest);
+	TiXmlElement *xmlRoot = NULL;
+	for (xmlRoot = xmlBody->FirstChildElement(); 
+		xmlRoot != NULL && xmlRoot->FirstChildElement() == NULL;
+		xmlRoot = xmlRoot->NextSiblingElement()) {
+		LogInfo("%s\n", xmlRoot->GetText());
+	}
+	
+	PdfOutlineItem* bmItem = NULL;
+	TiXmlElement *xmlItem = NULL;
+	const char *itemText = NULL;
+	const char *itemHref = NULL;
+	for (InitBookMark(docFirst, bmRoot, bmItem, xmlRoot, xmlItem, itemText, itemHref);
+		itemHref != NULL && itemText != NULL && bmItem != NULL && xmlItem != NULL;
+		IncreaseBookMark(docFirst, bmItem, xmlItem, itemText, itemHref)) { }
 
-	TiXmlElement *xmlBookSn = xmlBookAttr->NextSiblingElement();
-	curBm = xmlBookSn->GetText();
-	PdfDestination	p2Dest(docFirst.GetPage(docFirst.GetPageCount()));
-	docFirst.AddNamedDestination(p2Dest, curBm);
-	child1->CreateNext(curBm, p2Dest);
 	return 0;
 }
 
@@ -330,13 +372,13 @@ int MergeDoc(const char *firstFile, const char *secondFile, const char *doc, con
 
 int main( int argc, char* argv[] )
 {
-	for (int i = 0; i < 1; i++) {
-		// SetConsoleOutputCP(i);
-		// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
-		// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
-		MergeDoc("two-with-bookmarks.pdf", "two-with-bookmarks.pdf", "multi-with-bookmarks.pdf", "bookmark.xml");
-		std::cout << i << std::endl;
-	}
+	PdfMemDocument doc("english.pdf");
+	AddBookMark(doc, "bookmark.xml");
+	doc.Write("xxx.pdf");
+	// SetConsoleOutputCP(i);
+	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
+	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
+	//MergeDoc("two-with-bookmarks.pdf", "two-with-bookmarks.pdf", "multi-with-bookmarks.pdf", "bookmark.xml");
     /*
      * Check if a filename was passed as commandline argument.
      * If more than 1 argument or no argument is passed,
