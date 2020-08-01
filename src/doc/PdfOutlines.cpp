@@ -43,7 +43,6 @@
 #include "PdfDestination.h"
 
 namespace PoDoFo {
-
 PdfOutlineItem::PdfOutlineItem( const PdfString & sTitle, const PdfDestination & rDest, 
                                 PdfOutlineItem* pParentOutline, PdfVecObjects* pParent )
     : PdfElement( NULL, pParent ), 
@@ -106,11 +105,10 @@ PdfOutlineItem::PdfOutlineItem( PdfVecObjects* pParent )
 
 void PdfOutlineItem::DumpInfo(PdfDocument* pDoc)
 {
+	LogInfo("Title:%s\n", GetTitle().GetString());
 	PdfDestination *dest = GetDestination(pDoc);
-	int idx = 0;
 	if (dest) { 
-		LogInfo("dest:%d\n", idx++);
-		dest->GetDValue(); 
+		dest->DumpInfo(pDoc);
 	}
 	PdfAction *act = GetAction();
 	if (act) {
@@ -405,14 +403,31 @@ double PdfOutlineItem::GetTextColorBlue() const
 // PdfOutlines
 ///////////////////////////////////////////////////////////////////////////////////
 
-void PdfOutlines::DumpInfo(PdfDocument* pDoc)
+void PdfOutlines::DumpInfo(PdfDocument* pDoc, int level)
 {
+	PdfOutlines *items = NULL;
 	PdfOutlineItem * iter = NULL;
-	int idx = 0;
 	for (iter = First(); iter != NULL; iter = iter->Next())
 	{
-		LogInfo("lineItem:%d\n", idx++);
+		LogInfo("level:%d\n", level);
 		iter->DumpInfo(pDoc);
+		PdfDestination *dest = iter->GetDestination(pDoc);
+		if (dest != NULL) {
+			PdfObject *obj = dest->GetObject();
+			if (obj->IsDictionary()) {
+				
+			}
+		} else {
+			PdfAction* action = iter->GetAction();
+			if (action != NULL) {
+				PdfObject *object = action->GetObject();
+				if (object) {
+					object->GetDictionary().DumpInfo();
+				}
+			}
+		}
+		items = (PdfOutlines*)iter;
+		items->DumpInfo(pDoc, level + 1);
 	}
 }
 

@@ -322,7 +322,7 @@ inline PdfOutlineItem* PdfOutlineItem::Next() const
  */
 class PODOFO_DOC_API PdfOutlines : public PdfOutlineItem {
  public:
-	 void DumpInfo(PdfDocument* pDoc);
+	 void DumpInfo(PdfDocument* pDoc, int level);
     /** Create a new PDF outlines dictionary
      *  \param pParent parent vector of objects
      */

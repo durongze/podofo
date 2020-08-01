@@ -54,6 +54,16 @@ const char* PdfDestination::s_names[] = {
     "FitBV",
     NULL
 };
+void PdfDestination::DumpInfo(PdfDocument* pDoc)
+{
+	PdfPage* pPage = GetPage(pDoc);
+	if (pPage != NULL) {
+		int pNo = pPage->GetPageNumber();
+		LogInfo("Page : %d\n", pNo);
+	} else {
+		LogInfo("Page #\n");
+	}
+}
 
 PdfDestination::PdfDestination( PdfVecObjects* pParent )
 {

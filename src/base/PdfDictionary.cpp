@@ -38,6 +38,22 @@
 
 namespace PoDoFo {
 
+void PdfDictionary::DumpInfo()
+{
+	TCIKeyMap itKeys;
+	itKeys = GetKeys().begin();
+	while (itKeys != GetKeys().end())
+	{
+		// optimization as this is really slow:
+		// Call only for dictionaries, references and arrays
+		if ((*itKeys).second->IsArray() || (*itKeys).second->IsDictionary() || (*itKeys).second->IsReference()) {
+			(*itKeys).second;
+		}
+
+		++itKeys;
+	}
+}
+
 PdfDictionary::PdfDictionary()
     : m_bDirty( false )
 {

@@ -88,6 +88,7 @@ class PdfOutputDevice;
  */
 class PODOFO_API PdfDictionary : public PdfDataType {
  public:
+	 void DumpInfo();
     /** Create a new, empty dictionary
      */
     PdfDictionary();

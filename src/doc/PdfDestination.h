@@ -81,7 +81,7 @@ enum EPdfDestinationType {
  */
 class PODOFO_DOC_API PdfDestination {
  public:
-
+	 void DumpInfo(PdfDocument* pDoc);
     /** Create an empty destination - points to nowhere
      */
     PdfDestination( PdfVecObjects* pParent );
