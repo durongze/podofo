@@ -392,13 +392,15 @@ int AddBookMarkBy(PdfMemDocument &doc, PdfOutlineItem*& bmRoot,
 	}
 	PdfOutlineItem* bmItem = NULL;
 	TiXmlElement *xmlItem = NULL;
+	TiXmlElement *xmlItemA = NULL;
 	for (InitBookMark(doc, bmRoot, bmItem, xmlRoot, xmlItem);
 		bmItem != NULL && xmlItem != NULL;
 		IncreaseBookMark(doc, bmItem, xmlItem)) {
 		const char *itemText = NULL;
 		const char *itemHref = NULL;
-		itemHref = xmlItem->Attribute("href");
-		itemText = xmlItem->GetText();
+		xmlItemA = xmlItem->FirstChildElement();
+		itemHref = xmlItemA->Attribute("href");
+		itemText = xmlItemA->GetText();
 		LogInfo("Text:%s\n", itemText);
 	}
 	return 0;
