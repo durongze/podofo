@@ -63,29 +63,32 @@ const char* PdfAction::s_names[] = {
 void PdfAction::DumpInfo()
 {
 	EPdfAction actType = GetType();
+
+	LogInfo("type:%d\n", actType);
+	
 	switch (actType) {
-	case ePdfAction_GoTo:
-	ePdfAction_GoToR:
-	ePdfAction_GoToE:
-	ePdfAction_Launch:
-	ePdfAction_Thread:
-	ePdfAction_URI:
-	ePdfAction_Sound:
-	ePdfAction_Movie:
-	ePdfAction_Hide:
-	ePdfAction_Named:
-	ePdfAction_SubmitForm:
-	ePdfAction_ResetForm:
-	ePdfAction_ImportData:
-	ePdfAction_JavaScript:
-	ePdfAction_SetOCGState:
-	ePdfAction_Rendition:
-	ePdfAction_Trans:
-	ePdfAction_GoTo3DView:
-	ePdfAction_RichMediaExecute:
-		break;
-	default:
-		break;
+		case ePdfAction_GoTo:
+		ePdfAction_GoToR:
+		ePdfAction_GoToE:
+		ePdfAction_Launch:
+		ePdfAction_Thread:
+		ePdfAction_URI:
+		ePdfAction_Sound:
+		ePdfAction_Movie:
+		ePdfAction_Hide:
+		ePdfAction_Named:
+		ePdfAction_SubmitForm:
+		ePdfAction_ResetForm:
+		ePdfAction_ImportData:
+		ePdfAction_JavaScript:
+		ePdfAction_SetOCGState:
+		ePdfAction_Rendition:
+		ePdfAction_Trans:
+		ePdfAction_GoTo3DView:
+		ePdfAction_RichMediaExecute:
+			break;
+		default:
+			break;
 	}
 }
 PdfAction::PdfAction( EPdfAction eAction, PdfVecObjects* pParent )

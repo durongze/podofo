@@ -79,6 +79,20 @@ const char* PdfAnnotation::s_names[] = {
     NULL
 };
 
+void PdfAnnotation::DumpInfo()
+{
+	PdfAction *act = NULL;
+	EPdfAction actType;
+	LogInfo("title:%s\n",GetTitle().GetStringUtf8());
+	// this->GetDestination();
+	LogInfo("title:%s\n", GetContents().GetStringUtf8());
+	if (HasAction()) {
+		act = GetAction();
+		actType = act->GetType();
+		act->DumpInfo();
+	}
+}
+
 PdfAnnotation::PdfAnnotation( PdfPage* pPage, EPdfAnnotation eAnnot, const PdfRect & rRect, PdfVecObjects* pParent )
     : PdfElement( "Annot", pParent ), m_eAnnotation( eAnnot ), m_pAction( NULL ), m_pFileSpec( NULL ), m_pPage( pPage )
 {

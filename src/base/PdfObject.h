@@ -65,7 +65,7 @@ class PODOFO_API PdfObject : public PdfVariant {
     friend class PdfVecObjects;
 
  public:
-
+	 void DumpInfo();
     /** Create a PDF object with object and generation number -1
      *  and the value of being an empty PdfDictionary.
      */

@@ -46,6 +46,21 @@
 
 namespace PoDoFo {
 
+void PdfPage::DumpInfo()
+{
+	int numField = GetNumFields();
+	int numAnnot = GetNumAnnots();
+	LogInfo("NumFields:%d\n", numField);
+	LogInfo("NumAnnots:%d\n", numAnnot);
+	PdfAnnotation *annot = NULL;
+	for (int i = 0; i < numAnnot; i++) {
+		annot = this->GetAnnotation(i);
+		if (annot) {
+			annot->DumpInfo();
+		}
+	}
+}
+
 PdfPage::PdfPage( const PdfRect & rSize, PdfDocument* pParent )
     : PdfElement( "Page", pParent ), PdfCanvas(), m_pContents( NULL )
 {

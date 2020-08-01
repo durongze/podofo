@@ -51,6 +51,42 @@ using namespace std;
 
 namespace PoDoFo {
 
+void PdfObject::DumpInfo()
+{
+	if (IsArray()) {
+		PdfArray& a = GetArray();
+		for (PdfArray::iterator it = a.begin(); it != a.end(); ++it) {
+			if (!(*it).IsReference()) {
+				PODOFO_RAISE_ERROR_INFO(ePdfError_InvalidDataType, "/Contents array contained non-references");
+			}
+			// some damaged PDFs may have dangling references
+			if (!GetOwner()->GetObject((*it).GetReference())) {
+				PODOFO_RAISE_ERROR_INFO(ePdfError_InvalidDataType, "/Contents array NULL reference");
+			}
+			LogInfo("%s\n", "GetOwner()->GetObject((*it).GetReference())");
+		}
+	} else if (HasStream()) {
+		LogInfo("pContents");
+	} else if (IsDictionary()) {
+		LogInfo("pContents");
+		PdfError::LogMessage(eLogSeverity_Information,	" without stream => empty page");
+		// OC 18.09.2010 BugFix: Found an empty page in a PDF document:
+		//    103 0 obj
+		//    <<
+		//    /Type /Page
+		//    /MediaBox [ 0 0 595 842 ]
+		//    /Parent 3 0 R
+		//    /Resources <<
+		//    /ProcSet [ /PDF ]
+		//    >>
+		//    /Rotate 0
+		//    >>
+		//    endobj
+	} else {
+		PODOFO_RAISE_ERROR_INFO(ePdfError_InvalidDataType, "Page /Contents not stream or array of streams");
+	}
+}
+
 PdfObject::PdfObject()
     : PdfVariant( PdfDictionary() )
 {

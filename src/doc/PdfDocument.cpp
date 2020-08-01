@@ -96,10 +96,20 @@ PdfDocument::PdfDocument(bool bEmpty)
     }
 }
 
+void PdfDocument::DumpCataLog(int pNo)
+{
+	LogInfo("pageCount:%d\n", GetPageCount());
+	PdfPage *cataLog = GetPage(pNo);
+	if (cataLog != NULL) {
+		cataLog->DumpInfo();
+	}
+}
+
 void PdfDocument::DumpInfo()
 {
 	LogInfo("\n");
-	m_vecObjects.DumpInfo();
+	DumpCataLog(14);
+	// m_vecObjects.DumpInfo();
 
 	if (GetOutlines()) {
 		m_pOutlines->DumpInfo(this, 1); 
