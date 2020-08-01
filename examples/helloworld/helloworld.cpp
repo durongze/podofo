@@ -320,6 +320,7 @@ int IncreaseBookMark(PdfMemDocument&doc, PdfOutlineItem*& bmItem,
 int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 {
 	const char *xmlBookHref = NULL;
+	docFirst.DumpInfo();
 	TiXmlDocument xmlBm;
 	
 	xmlBm.LoadFile(bm);
