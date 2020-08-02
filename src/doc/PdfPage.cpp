@@ -46,7 +46,7 @@
 
 namespace PoDoFo {
 
-void PdfPage::DumpInfo()
+void PdfPage::DumpInfo(PdfDocument *doc)
 {
 	int numField = GetNumFields();
 	int numAnnot = GetNumAnnots();
@@ -56,7 +56,8 @@ void PdfPage::DumpInfo()
 	for (int i = 0; i < numAnnot; i++) {
 		annot = this->GetAnnotation(i);
 		if (annot) {
-			annot->DumpInfo();
+			annot->DumpInfo(doc);
+			// doc->DumpObject(this, 947 + i, 0);
 		}
 	}
 	m_pResources->DumpInfo();

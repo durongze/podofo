@@ -96,12 +96,21 @@ PdfDocument::PdfDocument(bool bEmpty)
     }
 }
 
+void PdfDocument::DumpObject(PdfPage *pPage, int objNum, int genNum)
+{
+	PdfReference ref(objNum, genNum);
+	PdfObject *obj = m_vecObjects.GetObject(ref);
+	if (obj) {
+		obj->DumpInfo();
+	}
+}
+
 void PdfDocument::DumpCataLog(int pNo)
 {
 	LogInfo("pageCount:%d\n", GetPageCount());
 	PdfPage *cataLog = GetPage(pNo);
 	if (cataLog != NULL) {
-		cataLog->DumpInfo();
+		cataLog->DumpInfo(this);
 	}
 }
 

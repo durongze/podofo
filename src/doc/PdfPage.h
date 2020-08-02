@@ -65,7 +65,7 @@ typedef TMapAnnotationDirect::const_iterator  TCIMapAnnotationDirect;
  */
 class PODOFO_DOC_API PdfPage : public PdfElement, public PdfCanvas {
  public:
-	 void DumpInfo();
+	 void DumpInfo(PdfDocument *doc);
     /** Create a new PdfPage object.
      *  \param rSize a PdfRect specifying the size of the page (i.e the /MediaBox key) in PDF units
      *  \param pParent add the page to this parent

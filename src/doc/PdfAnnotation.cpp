@@ -79,17 +79,24 @@ const char* PdfAnnotation::s_names[] = {
     NULL
 };
 
-void PdfAnnotation::DumpInfo()
+void PdfAnnotation::DumpInfo(PdfDocument *doc)
 {
 	PdfAction *act = NULL;
 	EPdfAction actType;
 	LogInfo("title:%s\n",GetTitle().GetStringUtf8());
 	// this->GetDestination();
 	LogInfo("Contents:%s\n", GetContents().GetStringUtf8());
+	PdfObject *obj = GetObject();
+	if (obj) {
+		obj->DumpInfo();
+	}
 	if (HasAction()) {
 		act = GetAction();
 		actType = act->GetType();
 		act->DumpInfo();
+	}
+	if (doc) {
+
 	}
 }
 

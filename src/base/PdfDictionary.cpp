@@ -46,8 +46,10 @@ void PdfDictionary::DumpInfo()
 	{
 		// optimization as this is really slow:
 		// Call only for dictionaries, references and arrays
-		if ((*itKeys).second->IsArray() || (*itKeys).second->IsDictionary() || (*itKeys).second->IsReference()) {
-			(*itKeys).second;
+		if ((*itKeys).second) {
+			if ((*itKeys).second->IsArray() || (*itKeys).second->IsDictionary() || (*itKeys).second->IsReference()) {
+				(*itKeys).second->DumpInfo();
+			}
 		}
 
 		++itKeys;

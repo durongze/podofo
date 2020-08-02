@@ -58,20 +58,29 @@ void PdfObject::DumpInfo()
 		PdfArray& a = GetArray();
 		for (PdfArray::iterator it = a.begin(); it != a.end(); ++it) {
 			if (!(*it).IsReference()) {
-				PODOFO_RAISE_ERROR_INFO(ePdfError_InvalidDataType, "/Contents array contained non-references");
+				LogInfo("/Contents array contained non-references\n");
+				continue;
 			}
 			// some damaged PDFs may have dangling references
-			if (!GetOwner()->GetObject((*it).GetReference())) {
-				PODOFO_RAISE_ERROR_INFO(ePdfError_InvalidDataType, "/Contents array NULL reference");
+			if ((GetOwner() == NULL) || !GetOwner()->GetObject((*it).GetReference())) {
+				LogInfo("/Contents array NULL reference\n");
+				continue;
 			}
 			LogInfo("%s\n", "GetOwner()->GetObject((*it).GetReference())");
 		}
 	} else if (HasStream()) {
-		LogInfo("Stream");
+		LogInfo("Stream\n");
+		PdfStream * stream = const_cast<PdfObject*>(this)->GetStream();
+		if (stream) {
+			LogInfo(" len :%d\n", stream->GetLength());
+		}
+		// stream->BeginAppend(PdfFilterFactory::CreateFilterList(this), true);
+		// stream->Append("", 1);
+		// stream->EndAppend();
 	} else if (IsDictionary()) {
-		LogInfo("IsDictionary");
+		LogInfo("IsDictionary\n");
 		GetDictionary().DumpInfo();
-		PdfError::LogMessage(eLogSeverity_Information,	" without stream => empty page");
+		PdfError::LogMessage(eLogSeverity_Information,	" without stream => empty page\n");
 		// OC 18.09.2010 BugFix: Found an empty page in a PDF document:
 		//    103 0 obj
 		//    <<
@@ -85,7 +94,7 @@ void PdfObject::DumpInfo()
 		//    >>
 		//    endobj
 	} else {
-		PODOFO_RAISE_ERROR_INFO(ePdfError_InvalidDataType, "Page /Contents not stream or array of streams");
+		LogInfo("Page /Contents not stream or array of streams\n");
 	}
 }
 
