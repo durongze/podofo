@@ -177,37 +177,9 @@ int main( int argc, char* argv[] )
   const char*   pszOutput = NULL;
   const char*   pszFontName = DEFAULT_FONT;
   bool          bUtf8 = false;
-
-  if( argc < 3 ) 
-  {
-    print_help();
-    exit( -1 );
-  }
-
-  for(int i=1;i<argc;i++) 
-  {
-      if( strcmp("-utf8", argv[i]) == 0 ) 
-      {
-          bUtf8 = true;
-      }
-      else if( strcmp("-fontname", argv[i]) == 0 ) 
-      {
-          ++i;
-          pszFontName = argv[i];
-      }
-      else 
-      {
-          if( pszInput == NULL )
-          {
-              pszInput = argv[i];
-          }
-          else
-          {
-              pszOutput = argv[i];
-          }
-      }
-  }
-
+	print_help();
+	pszInput = "in.txt";
+	pszOutput = "out.pdf";
   try {
       init( pszInput, pszOutput, bUtf8, pszFontName );
   } catch( PdfError & e ) {
