@@ -96,7 +96,8 @@ void PdfAnnotation::DumpInfo(PdfDocument *doc)
 		act->DumpInfo();
 	}
 	if (doc) {
-
+		PdfDestination dest =  GetDestination(doc);
+		dest.DumpInfo(doc);
 	}
 }
 
