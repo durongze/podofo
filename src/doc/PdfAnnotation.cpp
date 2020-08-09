@@ -83,8 +83,10 @@ void PdfAnnotation::DumpInfo(PdfDocument *doc)
 {
 	PdfAction *act = NULL;
 	EPdfAction actType;
-	LogInfo("title:%s\n",GetTitle().GetStringUtf8());
+	LogInfo("title:%s\n",GetTitle().GetUnicode());
 	// this->GetDestination();
+	LogInfo("Contents:%s\n", GetContents().GetUnicode());
+	LogInfo("Contents:%s\n", GetContents().GetString());
 	LogInfo("Contents:%s\n", GetContents().GetStringUtf8());
 	PdfObject *obj = GetObject();
 	if (obj) {
@@ -97,6 +99,18 @@ void PdfAnnotation::DumpInfo(PdfDocument *doc)
 	}
 	if (doc) {
 		PdfDestination dest =  GetDestination(doc);
+		PdfPage* pPage = dest.GetPage(doc);
+		if (pPage != NULL) {
+			FILE* fp = fopen("xx.txt", "a+");
+			if (fp != NULL) {
+				int pNo = pPage->GetPageNumber();
+				fwrite(GetContents().GetUnicode(), GetContents().GetUnicodeLength(), 1, fp);
+				fwrite(":", 1, 1, fp);
+				fwrite(std::to_string(pNo).c_str(), std::to_string(pNo).length(), 1, fp);
+				fwrite("\n", 1, 1, fp);
+				fclose(fp);
+			}
+		}
 		dest.DumpInfo(doc);
 	}
 }
