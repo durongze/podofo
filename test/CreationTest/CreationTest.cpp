@@ -476,8 +476,18 @@ void TextTest( PdfPainter* pPainter, PdfPage* pPage, PdfDocument* pDocument )
     pPainter->DrawText( x, y, "Expanded+spaced" );
     y -= pPainter->GetFont()->GetFontMetrics()->GetLineSpacing();
 
+
     pPainter->GetFont()->SetUnderlined( true );
     pPainter->DrawText( x, y, "Expanded+underlined+spaced" );
+	PdfRect        rect2(40000 * CONVERSION_CONSTANT, y, 50000 * CONVERSION_CONSTANT, 50000 * CONVERSION_CONSTANT);
+	PdfAnnotation* pAnnot2 = pPage->CreateAnnotation(ePdfAnnotation_Link, rect2);
+	PdfAction action(ePdfAction_URI, pDocument);
+	action.SetURI(PdfString("http://podofo.sf.net"));
+	//pAnnot2->SetDestination( pPage );
+	pAnnot2->SetContents("2.Contents Link");
+	pAnnot2->SetAction(action);
+	pAnnot2->SetFlags(ePdfAnnotationFlags_NoZoom);
+
     y -= pPainter->GetFont()->GetFontMetrics()->GetLineSpacing();
     pPainter->GetFont()->SetUnderlined( false );
     pFont->SetFontCharSpace( 0.0 );
@@ -504,10 +514,9 @@ void ImageTest( PdfPainter* pPainter, PdfPage* pPage, PdfDocument* pDocument )
     PdfImage image( pDocument );
 #endif // PODOFO_HAVE_JPEG_LIB
 
-    PdfRect        rect( 0, 0, 50000 * CONVERSION_CONSTANT, 50000 * CONVERSION_CONSTANT );
-    PdfRect        rect1( 80000 * CONVERSION_CONSTANT, 3000 * CONVERSION_CONSTANT, 20000 * CONVERSION_CONSTANT, 20000 * CONVERSION_CONSTANT );
-    PdfRect        rect2( 40000 * CONVERSION_CONSTANT, y, 50000 * CONVERSION_CONSTANT, 50000 * CONVERSION_CONSTANT );
-    PdfXObject     xObj( rect, pDocument );
+    PdfRect        xObjRect( 0, 0, 50000 * CONVERSION_CONSTANT, 50000 * CONVERSION_CONSTANT );
+    PdfXObject     xObj( xObjRect, pDocument );
+
     PdfPainter     pnt;    // XObject painter
 
 #ifdef PODOFO_HAVE_JPEG_LIB
@@ -545,30 +554,41 @@ void ImageTest( PdfPainter* pPainter, PdfPage* pPage, PdfDocument* pDocument )
     pPainter->Rectangle( 120000 * CONVERSION_CONSTANT, y - (50000 * CONVERSION_CONSTANT), 1000 * CONVERSION_CONSTANT, 1000 * CONVERSION_CONSTANT );
     pPainter->Fill();
 
-    PdfAnnotation* pAnnot1 = pPage->CreateAnnotation( ePdfAnnotation_Widget, rect1 );
-    PdfAnnotation* pAnnot2 = pPage->CreateAnnotation( ePdfAnnotation_Link, rect2 );
-    PdfAnnotation* pAnnot3 = pPage->CreateAnnotation( ePdfAnnotation_Text, PdfRect( 20.0, 20.0, 20.0, 20.0 ) );
+	PdfRect        pAnnotRect1(80000 * CONVERSION_CONSTANT, 3000 * CONVERSION_CONSTANT, 20000 * CONVERSION_CONSTANT, 20000 * CONVERSION_CONSTANT);
+    PdfAnnotation* pAnnot1 = pPage->CreateAnnotation( ePdfAnnotation_Widget, pAnnotRect1);
+	PdfRect        pAnnotRect2(40000 * CONVERSION_CONSTANT, y, 50000 * CONVERSION_CONSTANT, 50000 * CONVERSION_CONSTANT);
+    PdfAnnotation* pAnnot2 = pPage->CreateAnnotation( ePdfAnnotation_Link, pAnnotRect2);
+    PdfAnnotation* pAnnot3 = pPage->CreateAnnotation( ePdfAnnotation_Text, PdfRect( 40.0, 40.0, 200.0, 40.0 ) );
     PdfAnnotation* pAnnot4 = pPage->CreateAnnotation( ePdfAnnotation_FreeText, PdfRect( 70.0, 20.0, 250.0, 50.0 ) );
     PdfAnnotation* pAnnot5 = pPage->CreateAnnotation( ePdfAnnotation_Popup, PdfRect( 300.0, 20.0, 250.0, 50.0 ) );
-
-    pAnnot1->SetTitle( PdfString("Author: Dominik Seichter") );
-    pAnnot1->SetContents( PdfString("Hallo Welt!") );
+	PdfAnnotation* pAnnot6 = pPage->CreateAnnotation(ePdfAnnotation_Line, PdfRect(70.0, 60.0, 250.0, 50.0));
+	
+    // pAnnot1->SetTitle( PdfString("1.Title Author: Dominik Seichter") );
+    pAnnot1->SetContents( PdfString("2.Contents Hallo Welt!") );
     pAnnot1->SetAppearanceStream( &xObj );
 
     PdfAction action( ePdfAction_URI, pDocument );
     action.SetURI( PdfString("http://podofo.sf.net") );
 
     //pAnnot2->SetDestination( pPage );
+	pAnnot2->SetContents("2.Contents Link");
     pAnnot2->SetAction( action );
     pAnnot2->SetFlags( ePdfAnnotationFlags_NoZoom );
 
-    pAnnot3->SetTitle( "A text annotation" );
-    pAnnot3->SetContents( "Lorum ipsum dolor..." );
+    // pAnnot3->SetTitle( "1.Title A text annotation" );
+	pAnnot4->SetDestination(pDocument->GetPage(1));
+    pAnnot3->SetContents( "2.Contents Lorum ipsum dolor..." );
 
-    pAnnot4->SetContents( "An annotation of type ePdfAnnotation_FreeText." );
+	pAnnot4->SetDestination(pDocument->GetPage(1));
+	pAnnot4->SetBorderStyle(30,30,30);
+    pAnnot4->SetContents( "2.Contents An annotation of type ePdfAnnotation_FreeText." );
 
-    pAnnot5->SetContents( "A popup annotation." );
+    pAnnot5->SetContents( "2.Contents A popup annotation." );
     pAnnot5->SetOpen( true );
+
+	pAnnot6->SetDestination(pDocument->GetPage(2));
+	pAnnot6->SetBorderStyle(30, 30, 30);
+	pAnnot6->SetContents("2.Contents An annotation of type ePdfAnnotation_Line.");
 }
 
 void EllipseTest( PdfPainter* pPainter, PdfPage* pPage, PdfDocument* pDocument )
@@ -833,11 +853,8 @@ int main( int argc, char* argv[] )
         PdfPainterMM    painterMM;
         PdfOutlines*    outlines;
         PdfOutlineItem* pRoot;
-        if( argc != 2 )
-        {
-            printf("Usage: CreationTest [output_filename]\n");
-            return 0;
-        }
+		const char *output_filename = "outfile.pdf";
+        printf("Usage: CreationTest [output_filename]\n");
 
         printf("This test tests the PdfWriter and PdfDocument classes.\n");
         printf("It creates a new PdfFile from scratch.\n");
@@ -959,7 +976,7 @@ int main( int argc, char* argv[] )
 
         //xTEST_SAFE_OP( writer.AttachFile( PdfFileSpec("../../../podofo/test/CreationTest/CreationTest.cpp", true, &writer ) ) );
 
-        TEST_SAFE_OP( writer.Write( argv[1] ) );
+        TEST_SAFE_OP( writer.Write(output_filename) );
         //TEST_SAFE_OP( writer.Close() );
 
 #ifdef TEST_MEM_BUFFER
