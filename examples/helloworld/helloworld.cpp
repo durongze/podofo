@@ -320,6 +320,7 @@ void FreeDestStr(PdfDestStr *dstStr)
 
 PdfDestStr *CreateDestStr(PdfMemDocument&doc, TiXmlElement *xmlItem)
 {
+	int pNo = 0;
 	PdfDestStr *dstStr = new PdfDestStr();
 	TiXmlElement *xmlItemA = xmlItem->FirstChildElement();
 	const char *itemText = NULL;
@@ -329,11 +330,14 @@ PdfDestStr *CreateDestStr(PdfMemDocument&doc, TiXmlElement *xmlItem)
 	if (itemText == NULL) {
 		return NULL;
 	}
+	//if (strncmp(itemText, "Catalog", strlen("Catalog")) == 0) {
+		pNo = atoi(itemHref);
+	//}
 	wchar_t* pStr = AnsiToUnicode(itemText);
+	//wchar_t* pStr = (wchar_t*)(itemText);
 	dstStr->str = new PdfString(pStr);
 	delete[] pStr;
 
-	int pNo = 0;
 	dstStr->dest = new PdfDestination(doc.GetPage(pNo));
 	doc.AddNamedDestination(*(dstStr->dest), *(dstStr->str));
 
@@ -462,12 +466,190 @@ int MergeDoc(const char *firstFile, const char *secondFile, const char *doc, con
 	return 0;
 }
 
+void DumpXmlDeclaration(TiXmlDeclaration *decl)
+{
+	if (NULL != decl)
+	{
+		std::cout << decl->Version() << std::endl;
+		std::cout << decl->Standalone() << std::endl;
+		std::cout << decl->Encoding() << std::endl;
+	}
+}
+
+void DumpXmlNode(TiXmlElement* name)
+{
+
+	if (NULL != name)
+	{
+		if (NULL != name->Value())
+			std::cout << "Value:" << name->Value() << " ";
+		if (NULL != name->GetText())
+			std::cout << "Text:" << name->GetText() << " ";
+		std::cout << std::endl;
+		TiXmlElement *aXml = name->FirstChildElement();
+		DumpXmlNode(aXml);
+	}
+}
+
+TiXmlElement *FindChapter(TiXmlElement* body, const char *chapter)
+{
+	if (body == NULL) return NULL;
+	TiXmlElement* chapterXml = NULL;
+	chapterXml = body->FirstChildElement();
+	DumpXmlNode(chapterXml);
+	return chapterXml;
+}
+
+TiXmlElement *FindLastChapter(TiXmlElement* body, const char *chapter)
+{
+	if (body == NULL) return NULL;
+	TiXmlElement* chapterXml = NULL;
+	chapterXml = body->FirstChildElement();
+	for (; chapterXml != NULL && chapterXml->NextSiblingElement() != NULL; chapterXml = (TiXmlElement*)chapterXml->NextSiblingElement()) {}
+	DumpXmlNode(chapterXml);
+	return chapterXml;
+}
+
+TiXmlElement *AppendChapter(TiXmlElement* body, const char *chapter, const char *pageno)
+{
+	TiXmlElement *n = new TiXmlElement("div");
+	n->SetAttribute("class", "kindle-cn-toc-level-1");
+	TiXmlElement *a = new TiXmlElement("a");
+	a->SetAttribute("href", pageno);
+	TiXmlText newText(chapter);
+	a->LinkEndChild(&newText);
+	n->InsertEndChild(*a);
+	body->InsertEndChild(*n);
+	return FindLastChapter(body, NULL);
+}
+
+TiXmlElement *FindSection(TiXmlElement* chapter, const char *section)
+{
+	if (chapter == NULL) return NULL;
+	TiXmlElement* sectionXml = NULL;
+	sectionXml = chapter->FirstChildElement();
+	sectionXml = sectionXml->NextSiblingElement();
+	DumpXmlNode(sectionXml);
+	return sectionXml;
+}
+
+TiXmlElement *FindLastSection(TiXmlElement* chapter, const char *section)
+{
+	if (chapter == NULL) return NULL;
+	TiXmlElement* sectionXml = NULL;
+	sectionXml = (TiXmlElement*)chapter->FirstChildElement();
+	for (; sectionXml != NULL && sectionXml->NextSiblingElement() != NULL; sectionXml = (TiXmlElement*)sectionXml->NextSiblingElement()) {}
+	DumpXmlNode(sectionXml);
+	return sectionXml;
+}
+
+TiXmlElement *AppendSection(TiXmlElement* chapter, const char *section, const char *pageno)
+{
+	TiXmlElement *n = new TiXmlElement("div");
+	n->SetAttribute("class", "kindle-cn-toc-level-2");
+	TiXmlElement *a = new TiXmlElement("a");
+	a->SetAttribute("href", pageno);
+	TiXmlText newText(section);
+	a->LinkEndChild(&newText);
+	n->InsertEndChild(*a);
+	chapter->InsertEndChild(*n);
+	return FindLastSection(chapter, NULL);
+}
+
+TiXmlElement *FindLesson(TiXmlElement* section, const char *lesson)
+{
+	if (section == NULL) return NULL;
+	TiXmlElement* lessonXml = NULL;
+	lessonXml = section->FirstChildElement();
+	lessonXml = lessonXml->NextSiblingElement();
+	DumpXmlNode(lessonXml);
+	return lessonXml;
+}
+
+TiXmlElement *FindLastLesson(TiXmlElement* section, const char *lesson)
+{
+	if (section == NULL) return NULL;
+	TiXmlElement* lessonXml = NULL;
+	lessonXml = (TiXmlElement*)section->FirstChildElement();
+	for (; lessonXml != NULL && lessonXml->NextSiblingElement() != NULL; lessonXml = (TiXmlElement*)lessonXml->NextSiblingElement()) {}
+	DumpXmlNode(lessonXml);
+	return lessonXml;
+}
+
+TiXmlElement *AppendLesson(TiXmlElement* section, const char *lesson, const char *pageno)
+{
+	TiXmlElement *n = new TiXmlElement("div");
+	n->SetAttribute("class", "kindle-cn-toc-level-3");
+	TiXmlElement *a = new TiXmlElement("a");
+	a->SetAttribute("href", pageno);
+	TiXmlText newText(lesson);
+	a->LinkEndChild(&newText);
+	n->InsertEndChild(*a);
+	section->InsertEndChild(*n);
+	return FindLastSection(section, NULL);
+}
+
+TiXmlElement *AppendChapterByBody(TiXmlElement* body, const char *chapter, const char *pageno)
+{
+	return AppendChapter(body, chapter, pageno);
+}
+
+TiXmlElement *AppendSectionByBody(TiXmlElement* body, const char *section, const char *pageno)
+{
+	TiXmlElement *chapter = FindLastChapter(body, NULL);
+	return AppendSection(chapter, section, pageno);
+}
+
+TiXmlElement *AppendLessonByBody(TiXmlElement* body, const char *lesson, const char *pageno)
+{
+	TiXmlElement *chapter = FindLastChapter(body, NULL);
+	TiXmlElement *section = FindLastSection(chapter, NULL);
+	return AppendSection(section, lesson, pageno);
+}
+
+int GenXmlDoc(const char* docName, int type, const char *title, const char *pageno)
+{
+	TiXmlDocument doc;
+	doc.LoadFile(docName);
+
+	if (docName == NULL || title == NULL || pageno == NULL) {
+		return 0;
+	}
+	/*<?xml version="1.0" standalone="yes"?>,
+	声明对象具有三个属性值，版本，编码和独立文件声明 */
+	TiXmlNode * node = doc.FirstChild();
+	if (NULL != node) {
+		TiXmlDeclaration *decl = node->ToDeclaration();
+		DumpXmlDeclaration(decl);
+	}
+
+	TiXmlElement* root = doc.RootElement();
+	TiXmlElement* body = NULL;
+	if (NULL != root) {
+		TiXmlElement* head = root->FirstChildElement();
+		DumpXmlNode(head);
+		if (head) {
+			body = head->NextSiblingElement();
+			DumpXmlNode(body);
+		}
+	}
+	if (type == 1) {
+		TiXmlElement *chpater = AppendChapterByBody(body, title, pageno);
+	} else if (type == 2) {
+		TiXmlElement *section = AppendSectionByBody(body, title, pageno);
+	} else {
+		TiXmlElement *lesson = AppendLessonByBody(body, title, pageno);
+	}
+	doc.SaveFile(docName);
+	return 0;
+}
+
 int main( int argc, char* argv[] )
 {
 	SetConsoleOutputCP(CP_WINUNICODE);
-	PdfMemDocument doc("english.pdf");
-	AddBookMark(doc, "bookmark.xml");
-	doc.Write("xxx.pdf");
+	PdfMemDocument doc("chu_guo_kou_yu.pdf");
+	AddBookMark(doc, "chu_guo_kou_yu.xml");
+	doc.Write("chu_guo_kou_yu_bm.pdf");
 
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
