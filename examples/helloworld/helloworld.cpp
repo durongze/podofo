@@ -537,10 +537,17 @@ TiXmlElement *FindLastSection(TiXmlElement* chapter, const char *section)
 {
 	if (chapter == NULL) return NULL;
 	TiXmlElement* sectionXml = NULL;
-	sectionXml = (TiXmlElement*)chapter->FirstChildElement();
-	for (; sectionXml != NULL && sectionXml->NextSiblingElement() != NULL; sectionXml = (TiXmlElement*)sectionXml->NextSiblingElement()) {}
-	DumpXmlNode(sectionXml);
-	return sectionXml;
+	sectionXml = chapter->FirstChildElement();
+	int idx = 0;
+	for (; sectionXml != NULL && sectionXml->NextSiblingElement() != NULL; sectionXml = sectionXml->NextSiblingElement()) {
+		idx++;
+	}
+	if (idx == 0) {
+		return NULL;
+	} else {
+		DumpXmlNode(sectionXml);
+		return sectionXml;
+	}
 }
 
 TiXmlElement *AppendSection(TiXmlElement* chapter, const char *section, const char *pageno)
@@ -571,9 +578,16 @@ TiXmlElement *FindLastLesson(TiXmlElement* section, const char *lesson)
 	if (section == NULL) return NULL;
 	TiXmlElement* lessonXml = NULL;
 	lessonXml = (TiXmlElement*)section->FirstChildElement();
-	for (; lessonXml != NULL && lessonXml->NextSiblingElement() != NULL; lessonXml = (TiXmlElement*)lessonXml->NextSiblingElement()) {}
-	DumpXmlNode(lessonXml);
-	return lessonXml;
+	int idx = 0;
+	for (; lessonXml != NULL && lessonXml->NextSiblingElement() != NULL; lessonXml = lessonXml->NextSiblingElement()) {
+		idx++;
+	}
+	if (idx == 0) {
+		return NULL;
+	} else {
+		DumpXmlNode(lessonXml);
+		return lessonXml;
+	}
 }
 
 TiXmlElement *AppendLesson(TiXmlElement* section, const char *lesson, const char *pageno)
@@ -591,19 +605,37 @@ TiXmlElement *AppendLesson(TiXmlElement* section, const char *lesson, const char
 
 TiXmlElement *AppendChapterByBody(TiXmlElement* body, const char *chapter, const char *pageno)
 {
+	if (body == NULL) {
+		return NULL;
+	}
 	return AppendChapter(body, chapter, pageno);
 }
 
 TiXmlElement *AppendSectionByBody(TiXmlElement* body, const char *section, const char *pageno)
 {
+	if (body == NULL) {
+		return NULL;
+	}
 	TiXmlElement *chapter = FindLastChapter(body, NULL);
+	if (chapter == NULL) {
+		return AppendSection(body, section, pageno);
+	}
 	return AppendSection(chapter, section, pageno);
 }
 
 TiXmlElement *AppendLessonByBody(TiXmlElement* body, const char *lesson, const char *pageno)
 {
+	if (body == NULL) {
+		return NULL;
+	}
 	TiXmlElement *chapter = FindLastChapter(body, NULL);
+	if (chapter == NULL) {
+		return AppendSection(body, lesson, pageno);
+	}
 	TiXmlElement *section = FindLastSection(chapter, NULL);
+	if (section == NULL) {
+		return AppendSection(chapter, lesson, pageno);
+	}
 	return AppendSection(section, lesson, pageno);
 }
 
@@ -647,9 +679,13 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 int main( int argc, char* argv[] )
 {
 	SetConsoleOutputCP(CP_WINUNICODE);
-	PdfMemDocument doc("chu_guo_kou_yu.pdf");
-	AddBookMark(doc, "chu_guo_kou_yu.xml");
-	doc.Write("chu_guo_kou_yu_bm.pdf");
+	
+	// SetConsoleOutputCP(CP_UTF8);
+	// SetConsoleOutputCP(CP_ACP);
+	PdfMemDocument doc("lang_wen.pdf");
+	doc.DumpInfo();
+	// AddBookMark(doc, "lang_wen.xml");
+	doc.Write("lang_wen_bm.pdf");
 
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
