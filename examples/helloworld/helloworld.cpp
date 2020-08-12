@@ -24,7 +24,7 @@
  * some output to the console.
  */
 #include <iostream>
-
+#include <fstream>
 /*
  * Now include all podofo header files, to have access
  * to all functions of podofo and so that you do not have
@@ -639,6 +639,94 @@ TiXmlElement *AppendLessonByBody(TiXmlElement* body, const char *lesson, const c
 	return AppendSection(section, lesson, pageno);
 }
 
+class XmlCfg
+{
+public:
+	XmlCfg()
+	{
+		m_chapter.push_back("第*篇");
+		m_section.push_back("第*章");
+		m_lesson.push_back("第*节");
+		// m_lesson.push_back("[0-9].[0-9]");
+	}
+	int MatchChapter(std::string chapter)
+	{
+		std::vector<std::string>::iterator iter;
+		for (iter = m_chapter.begin(); m_chapter.end() != iter; iter++) {
+			if (0 < chapter.find(iter->at(0), 0) && 0 < chapter.find(iter->at(2), 0)) {
+				return 1;
+			}
+		}
+		return 0;
+	}
+	int MatchSection(std::string section)
+	{
+		std::vector<std::string>::iterator iter;
+		for (iter = m_chapter.begin(); m_chapter.end() != iter; iter++) {
+			if (0 < section.find(iter->at(0), 0) && 0 < section.find(iter->at(2), 0)) {
+				return 1;
+			}
+		}
+		return 0;
+	}
+	int MatchLesson(std::string lesson)
+	{
+		std::vector<std::string>::iterator iter;
+		for (iter = m_chapter.begin(); m_chapter.end() != iter; iter++) {
+			if (0 < lesson.find(iter->at(0), 0) && 0 < lesson.find(iter->at(2), 0)) {
+				return 1;
+			}
+		}
+		return 0;
+	}
+private:
+	std::vector<std::string> m_chapter;
+	std::vector<std::string> m_section;
+	std::vector<std::string> m_lesson;
+};
+
+XmlCfg cfg;
+
+int ParseLine(const std::string& line, std::vector<std::string>& allCol)
+{
+	char oper = ' ';
+	for (int idxCol = 0; idxCol < line.length(); ++idxCol)
+	{
+		int idxTab = line.find(oper, idxCol);
+		std::string element;
+		if (idxTab == -1) {
+			element = line.substr(idxCol, line.length() - idxCol);
+			allCol.push_back(element);
+			break;
+		}
+		else {
+			element = line.substr(idxCol, idxTab - idxCol);
+			idxCol = idxTab;
+			if (element.length() > 1) {
+				allCol.push_back(element);
+			}
+		}
+	}
+	return 0;
+}
+
+int ProcTxtToXml(const char *file, std::map<int, std::vector<std::string> >& allData)
+{
+	std::fstream s(file, std::fstream::in | std::fstream::out);
+	int idxRow = 0;
+	for (std::string line; std::getline(s, line); ++idxRow) {
+		std::vector<std::string> allCol;
+		ParseLine(line, allCol);
+		if (allCol.size() != 0) {
+			allData[idxRow] = allCol;
+		}
+		else {
+			--idxRow;
+		}
+	}
+	return 0;
+}
+
 int GenXmlDoc(const char* docName, int type, const char *title, const char *pageno)
 {
 	TiXmlDocument doc;
@@ -678,6 +766,10 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 
 int main( int argc, char* argv[] )
 {
+	const char *file = "zhi_neng_jia_ting.txt";
+	std::map<int, std::vector<std::string> > allData;
+	ProcTxtToXml(file, allData);
+	return 0;
 	SetConsoleOutputCP(CP_WINUNICODE);
 	
 	// SetConsoleOutputCP(CP_UTF8);
