@@ -668,7 +668,7 @@ public:
 		for (iter = m_chapter.begin(); m_chapter.end() != iter; iter++) {
 			wchar_t *pchapter = AnsiToUnicode(chapter.c_str());
 			wchar_t *piter = AnsiToUnicode(iter->c_str());
-			bool eq = pchapter[0] == piter[0] && pchapter[2] == piter[2];
+			bool eq = pchapter[0] == piter[0] && (pchapter[2] == piter[2] || pchapter[3] == piter[2]);
 			delete[] pchapter;
 			delete[] piter;
 			if (eq) {
@@ -683,7 +683,7 @@ public:
 		for (iter = m_section.begin(); m_section.end() != iter; iter++) {
 			wchar_t *psection = AnsiToUnicode(section.c_str());
 			wchar_t *piter = AnsiToUnicode(iter->c_str());
-			bool eq = psection[0] == piter[0] && psection[2] == piter[2];
+			bool eq = psection[0] == piter[0] && (psection[2] == piter[2] || psection[3] == piter[2]);
 			delete[] psection;
 			delete[] piter;
 			if (eq) {
@@ -698,7 +698,7 @@ public:
 		for (iter = m_lesson.begin(); m_lesson.end() != iter; iter++) {
 			wchar_t *plesson = AnsiToUnicode(lesson.c_str());
 			wchar_t *piter = AnsiToUnicode(iter->c_str());
-			bool eq = plesson[0] == piter[0] && plesson[2] == piter[2];
+			bool eq = plesson[0] == piter[0] && (plesson[2] == piter[2] || plesson[3] == piter[2]);
 			delete[] plesson;
 			delete[] piter;
 			if (eq) {
