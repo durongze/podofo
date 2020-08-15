@@ -639,6 +639,19 @@ TiXmlElement *AppendLessonByBody(TiXmlElement* body, const char *lesson, const c
 	return AppendSection(section, lesson, pageno);
 }
 
+std::string get_raw_string(std::string const& s)
+{
+	std::ostringstream out;
+	out << '\"';
+	out << std::hex;
+	for (std::string::const_iterator it = s.begin(); it != s.end(); ++it)
+	{
+		out << "\\x" << *it;
+	}
+	out << '\"';
+	return out.str();
+}
+
 class XmlCfg
 {
 public:
@@ -653,7 +666,12 @@ public:
 	{
 		std::vector<std::string>::iterator iter;
 		for (iter = m_chapter.begin(); m_chapter.end() != iter; iter++) {
-			if (0 < chapter.find(iter->at(0), 0) && 0 < chapter.find(iter->at(2), 0)) {
+			wchar_t *pchapter = AnsiToUnicode(chapter.c_str());
+			wchar_t *piter = AnsiToUnicode(iter->c_str());
+			bool eq = pchapter[0] == piter[0] && pchapter[2] == piter[2];
+			delete[] pchapter;
+			delete[] piter;
+			if (eq) {
 				return 1;
 			}
 		}
@@ -662,8 +680,13 @@ public:
 	int MatchSection(std::string section)
 	{
 		std::vector<std::string>::iterator iter;
-		for (iter = m_chapter.begin(); m_chapter.end() != iter; iter++) {
-			if (0 < section.find(iter->at(0), 0) && 0 < section.find(iter->at(2), 0)) {
+		for (iter = m_section.begin(); m_section.end() != iter; iter++) {
+			wchar_t *psection = AnsiToUnicode(section.c_str());
+			wchar_t *piter = AnsiToUnicode(iter->c_str());
+			bool eq = psection[0] == piter[0] && psection[2] == piter[2];
+			delete[] psection;
+			delete[] piter;
+			if (eq) {
 				return 1;
 			}
 		}
@@ -672,12 +695,30 @@ public:
 	int MatchLesson(std::string lesson)
 	{
 		std::vector<std::string>::iterator iter;
-		for (iter = m_chapter.begin(); m_chapter.end() != iter; iter++) {
-			if (0 < lesson.find(iter->at(0), 0) && 0 < lesson.find(iter->at(2), 0)) {
+		for (iter = m_lesson.begin(); m_lesson.end() != iter; iter++) {
+			wchar_t *plesson = AnsiToUnicode(lesson.c_str());
+			wchar_t *piter = AnsiToUnicode(iter->c_str());
+			bool eq = plesson[0] == piter[0] && plesson[2] == piter[2];
+			delete[] plesson;
+			delete[] piter;
+			if (eq) {
 				return 1;
 			}
 		}
 		return 0;
+	}
+	int MatchType(std::string title) 
+	{
+		if (MatchChapter(title)) {
+			return 1;
+		}
+		if (MatchSection(title)) {
+			return 2;
+		}
+		if (MatchLesson(title)) {
+			return 3;
+		}
+		return 3;
 	}
 private:
 	std::vector<std::string> m_chapter;
@@ -764,20 +805,48 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 	return 0;
 }
 
-int main( int argc, char* argv[] )
+int XmlMain()
 {
+	SetConsoleOutputCP(CP_WINUNICODE);
+	int idx = 0;
+	int type = 0;
+	int pageoffset = 19;
+	std::string pageno = "1";
+	std::string title;
 	const char *file = "zhi_neng_jia_ting.txt";
 	std::map<int, std::vector<std::string> > allData;
 	ProcTxtToXml(file, allData);
+	std::map<int, std::vector<std::string> >::iterator iter;
+	std::vector<std::string>::iterator iterLine;
+	for (iter = allData.begin(); allData.end() != iter; iter++)
+	{
+		for (idx = 1, title = "", iterLine = iter->second.begin(); iter->second.end() != iterLine; iterLine++, idx++) {
+			if (iter->second.size() == 1) {
+				title = *iterLine;
+			}
+			else if (idx < iter->second.size()) {
+				title += *iterLine;
+			}
+			else {
+				pageno = *iterLine;
+			}
+		}
+		pageno = std::to_string(atoi(pageno.c_str()) + pageoffset);
+		type = cfg.MatchType(title);
+		GenXmlDoc("zhi_neng_jia_ting.xml", type, title.c_str(), pageno.c_str());
+	}
 	return 0;
-	SetConsoleOutputCP(CP_WINUNICODE);
-	
+}
+
+int main( int argc, char* argv[] )
+{
+	XmlMain();
 	// SetConsoleOutputCP(CP_UTF8);
 	// SetConsoleOutputCP(CP_ACP);
-	PdfMemDocument doc("lang_wen.pdf");
+	PdfMemDocument doc("zhi_neng_jia_ting.pdf");
 	doc.DumpInfo();
-	// AddBookMark(doc, "lang_wen.xml");
-	doc.Write("lang_wen_bm.pdf");
+	AddBookMark(doc, "zhi_neng_jia_ting.xml");
+	doc.Write("zhi_neng_jia_ting_bm.pdf");
 
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
