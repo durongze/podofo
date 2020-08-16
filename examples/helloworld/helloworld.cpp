@@ -659,49 +659,66 @@ public:
 	{
 		m_chapter.push_back("第*篇");
 		m_section.push_back("第*章");
+		m_section.push_back("1.1.1");
 		m_lesson.push_back("第*节");
+		m_lesson.push_back("1.1.1");
 		// m_lesson.push_back("[0-9].[0-9]");
+	}
+
+	bool ChapterCond(std::string chapter, std::string cond)
+	{
+		wchar_t *pchapter = AnsiToUnicode(chapter.c_str());
+		wchar_t *piter = AnsiToUnicode(cond.c_str());
+		bool eq = pchapter[0] == piter[0] && (pchapter[2] == piter[2] || pchapter[3] == piter[2]);
+		delete[] pchapter;
+		delete[] piter;
+		return eq;
 	}
 	int MatchChapter(std::string chapter)
 	{
 		std::vector<std::string>::iterator iter;
 		for (iter = m_chapter.begin(); m_chapter.end() != iter; iter++) {
-			wchar_t *pchapter = AnsiToUnicode(chapter.c_str());
-			wchar_t *piter = AnsiToUnicode(iter->c_str());
-			bool eq = pchapter[0] == piter[0] && (pchapter[2] == piter[2] || pchapter[3] == piter[2]);
-			delete[] pchapter;
-			delete[] piter;
-			if (eq) {
+			if (ChapterCond(chapter, *iter)) {
 				return 1;
 			}
 		}
 		return 0;
+	}
+	bool SectionCond(std::string section, std::string cond)
+	{
+		wchar_t *psection = AnsiToUnicode(section.c_str());
+		wchar_t *piter = AnsiToUnicode(cond.c_str());
+		bool eq = psection[0] == piter[0] && (psection[2] == piter[2] || psection[3] == piter[2]);
+		bool eqNum = psection[1] == piter[1] && (psection[3] != piter[3]);
+		delete[] psection;
+		delete[] piter;
+		return eq || eqNum;
 	}
 	int MatchSection(std::string section)
 	{
 		std::vector<std::string>::iterator iter;
 		for (iter = m_section.begin(); m_section.end() != iter; iter++) {
-			wchar_t *psection = AnsiToUnicode(section.c_str());
-			wchar_t *piter = AnsiToUnicode(iter->c_str());
-			bool eq = psection[0] == piter[0] && (psection[2] == piter[2] || psection[3] == piter[2]);
-			delete[] psection;
-			delete[] piter;
-			if (eq) {
+			if (SectionCond(section, *iter)) {
 				return 1;
 			}
 		}
 		return 0;
 	}
+	bool LessonCond(std::string lesson, std::string cond)
+	{
+		wchar_t *plesson = AnsiToUnicode(lesson.c_str());
+		wchar_t *piter = AnsiToUnicode(cond.c_str());
+		bool eq = plesson[0] == piter[0] && (plesson[2] == piter[2] || plesson[3] == piter[2]);
+		bool eqNum = plesson[1] == piter[1] && (plesson[3] == piter[3]);
+		delete[] plesson;
+		delete[] piter;
+		return eq || eqNum;
+	}
 	int MatchLesson(std::string lesson)
 	{
 		std::vector<std::string>::iterator iter;
 		for (iter = m_lesson.begin(); m_lesson.end() != iter; iter++) {
-			wchar_t *plesson = AnsiToUnicode(lesson.c_str());
-			wchar_t *piter = AnsiToUnicode(iter->c_str());
-			bool eq = plesson[0] == piter[0] && (plesson[2] == piter[2] || plesson[3] == piter[2]);
-			delete[] plesson;
-			delete[] piter;
-			if (eq) {
+			if (LessonCond(lesson, *iter)) {
 				return 1;
 			}
 		}
@@ -805,17 +822,17 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 	return 0;
 }
 
-int XmlMain()
+int XmlMain(std::string fname)
 {
 	SetConsoleOutputCP(CP_WINUNICODE);
 	int idx = 0;
 	int type = 0;
-	int pageoffset = 19;
+	int pageoffset = 5;
 	std::string pageno = "1";
 	std::string title;
-	const char *file = "zhi_neng_jia_ting.txt";
+	std::string file = (fname + ".txt");
 	std::map<int, std::vector<std::string> > allData;
-	ProcTxtToXml(file, allData);
+	ProcTxtToXml(file.c_str(), allData);
 	std::map<int, std::vector<std::string> >::iterator iter;
 	std::vector<std::string>::iterator iterLine;
 	for (iter = allData.begin(); allData.end() != iter; iter++)
@@ -833,20 +850,20 @@ int XmlMain()
 		}
 		pageno = std::to_string(atoi(pageno.c_str()) + pageoffset);
 		type = cfg.MatchType(title);
-		GenXmlDoc("zhi_neng_jia_ting.xml", type, title.c_str(), pageno.c_str());
+		GenXmlDoc((fname + ".xml").c_str(), type, title.c_str(), pageno.c_str());
 	}
 	return 0;
 }
 
 int main( int argc, char* argv[] )
 {
-	XmlMain();
+	XmlMain("yu_fa");
 	// SetConsoleOutputCP(CP_UTF8);
 	// SetConsoleOutputCP(CP_ACP);
-	PdfMemDocument doc("zhi_neng_jia_ting.pdf");
+	PdfMemDocument doc("yu_fa.pdf");
 	doc.DumpInfo();
-	AddBookMark(doc, "zhi_neng_jia_ting.xml");
-	doc.Write("zhi_neng_jia_ting_bm.pdf");
+	AddBookMark(doc, "yu_fa.xml");
+	doc.Write("yu_fa_bm.pdf");
 
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
