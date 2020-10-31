@@ -429,6 +429,9 @@ int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 	TiXmlElement *xmlBody = xmlHtml->FirstChildElement("body");
 
 	PdfOutlines* bMarks = docFirst.GetOutlines();
+	// bMarks->Erase();
+#if 1
+
 	PdfOutlineItem*	bmRoot = bMarks->CreateRoot(bm);
 
 	TiXmlElement *xmlRoot = NULL;
@@ -439,7 +442,7 @@ int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 	}
 	
 	AddBookMarkBy(docFirst, bmRoot, xmlRoot);
-
+#endif
 	return 0;
 }
 
@@ -657,10 +660,11 @@ class XmlCfg
 public:
 	XmlCfg()
 	{
-		m_chapter.push_back("µÚ*Æª");
-		m_section.push_back("µÚ*ÕÂ");
+		// m_chapter.push_back("Lesson");
+		m_chapter.push_back("ç¬¬*ç« èŠ‚");
+		// m_section.push_back("ç¬¬*èŠ‚");
 		m_section.push_back("1.1.1");
-		m_lesson.push_back("µÚ*½Ú");
+		// m_lesson.push_back("ç¬¬*ç¯‡");
 		m_lesson.push_back("1.1.1");
 		// m_lesson.push_back("[0-9].[0-9]");
 	}
@@ -688,11 +692,11 @@ public:
 	{
 		wchar_t *psection = AnsiToUnicode(section.c_str());
 		wchar_t *piter = AnsiToUnicode(cond.c_str());
-		bool eq = psection[0] == piter[0] && (psection[2] == piter[2] || psection[3] == piter[2]);
-		bool eqNum = psection[1] == piter[1] && (psection[3] != piter[3]);
+		bool eq = psection[0] == piter[0];// && (psection[2] == piter[2] || psection[3] == piter[2]);
+		bool eqNum = (psection[1] == piter[1] && psection[3] != piter[3]) || (psection[2] == piter[1] && psection[4] != piter[3]);
 		delete[] psection;
 		delete[] piter;
-		return eq || eqNum;
+		return eqNum;
 	}
 	int MatchSection(std::string section)
 	{
@@ -709,10 +713,10 @@ public:
 		wchar_t *plesson = AnsiToUnicode(lesson.c_str());
 		wchar_t *piter = AnsiToUnicode(cond.c_str());
 		bool eq = plesson[0] == piter[0] && (plesson[2] == piter[2] || plesson[3] == piter[2]);
-		bool eqNum = plesson[1] == piter[1] && (plesson[3] == piter[3]);
+		bool eqNum = (plesson[1] == piter[1] && (plesson[3] == piter[3])) || (plesson[2] == piter[1] && (plesson[4] == piter[3]));
 		delete[] plesson;
 		delete[] piter;
-		return eq || eqNum;
+		return eqNum;
 	}
 	int MatchLesson(std::string lesson)
 	{
@@ -794,7 +798,7 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 		return 0;
 	}
 	/*<?xml version="1.0" standalone="yes"?>,
-	ÉùÃ÷¶ÔÏó¾ßÓÐÈý¸öÊôÐÔÖµ£¬°æ±¾£¬±àÂëºÍ¶ÀÁ¢ÎÄ¼þÉùÃ÷ */
+	å£°æ˜Žå¯¹è±¡å…·æœ‰ä¸‰ä¸ªå±žæ€§å€¼ï¼Œç‰ˆæœ¬ï¼Œç¼–ç å’Œç‹¬ç«‹æ–‡ä»¶å£°æ˜Ž */
 	TiXmlNode * node = doc.FirstChild();
 	if (NULL != node) {
 		TiXmlDeclaration *decl = node->ToDeclaration();
@@ -822,12 +826,11 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 	return 0;
 }
 
-int XmlMain(std::string fname)
+int XmlMain(std::string fname, int pageoffset)
 {
 	SetConsoleOutputCP(CP_WINUNICODE);
 	int idx = 0;
 	int type = 0;
-	int pageoffset = 5;
 	std::string pageno = "1";
 	std::string title;
 	std::string file = (fname + ".txt");
@@ -857,13 +860,17 @@ int XmlMain(std::string fname)
 
 int main( int argc, char* argv[] )
 {
-	XmlMain("yu_fa");
+	std::string fileName = "min_jie";
+    std::string genXmlCmd = "copy bak.xml ";
+    genXmlCmd += fileName + ".xml";
+    system(genXmlCmd.c_str());
+    XmlMain(fileName, 23-1);
 	// SetConsoleOutputCP(CP_UTF8);
 	// SetConsoleOutputCP(CP_ACP);
-	PdfMemDocument doc("yu_fa.pdf");
+	PdfMemDocument doc((fileName + ".pdf").c_str());
 	doc.DumpInfo();
-	AddBookMark(doc, "yu_fa.xml");
-	doc.Write("yu_fa_bm.pdf");
+	AddBookMark(doc, (fileName + ".xml").c_str());
+	doc.Write((fileName + "_bm.pdf").c_str());
 
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
