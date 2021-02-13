@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2010 by Dominik Seichter                                *
+ *   Copyright (C) 2006 by Dominik Seichter                                *
  *   domseichter@web.de                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -31,57 +31,48 @@
  *   files in the program, then also delete it here.                       *
  ***************************************************************************/
 
-#ifndef _PDF_FONT_TYPE1_BASE14_H_
-#define _PDF_FONT_TYPE1_BASE14_H_
-
-#include "podofo/base/PdfDefines.h"
-#include "PdfFontSimple.h"
+#include "PdfOwnedDataType.h"
+#include "PdfObject.h"
+#include "PdfVecObjects.h"
 
 namespace PoDoFo {
 
-/** A PdfFont implementation that can be used
- *  draw with base14 type1 fonts into a PDF file. 
- */
-class PdfFontType1Base14 : public PdfFontSimple {
- public:
-    /** Create a new Type1 font object.
-     *
-     *  \param pMetrics pointer to a font metrics object. The font in the PDF
-     *         file will match this fontmetrics object. The metrics object is 
-     *         deleted along with the font.
-     *  \param pEncoding the encoding of this font. The font will take ownership of this object
-     *                   depending on pEncoding->IsAutoDelete()
-     *  \param pParent parent of the font object
-     *  
-     */
-    PdfFontType1Base14( PdfFontMetrics* pMetrics, const PdfEncoding* const pEncoding, 
-                  PdfVecObjects* pParent );
+PdfOwnedDataType::PdfOwnedDataType()
+    : m_pOwner( NULL )
+{
+}
 
-    // OC 13.08.2010 New:
-    /** Create a new Type1 font object based on an existing PdfObject
-     *  \param pMetrics pointer to a font metrics object. The font in the PDF
-     *         file will match this fontmetrics object. The metrics object is 
-     *         deleted along with the font.
-     *  \param pEncoding the encoding of this font. The font will take ownership of this object
-     *                   depending on pEncoding->IsAutoDelete()
-     *  \param pObject an existing PdfObject
-     */
-    PdfFontType1Base14( PdfFontMetrics* pMetrics, const PdfEncoding* const pEncoding, 
-                  PdfObject* pObject );
+// NOTE: Don't copy owner. Copied objects must be always detached.
+// Ownership will be set automatically elsewhere
+PdfOwnedDataType::PdfOwnedDataType( const PdfOwnedDataType &rhs )
+    : PdfDataType( rhs ), m_pOwner( NULL )
+{
+}
 
- protected:
-    /** Embed the font file directly into the PDF file.
-     *
-     *  \param pDescriptor font descriptor object
-     */
-    virtual void EmbedFontFile( PdfObject* pDescriptor );
+PdfObject * PdfOwnedDataType::GetIndirectObject( const PdfReference &rReference ) const
+{
+    if ( m_pOwner == NULL )
+        PODOFO_RAISE_ERROR_INFO( ePdfError_InvalidHandle, "Object is a reference but does not have an owner!" );
 
- private:
-    void InitBase14Font( PdfFontMetrics* pMetrics );
+    return m_pOwner->GetOwner()->GetObject( rReference );
+}
+
+void PdfOwnedDataType::SetOwner( PdfObject* pOwner )
+{
+    PODOFO_ASSERT( pOwner != NULL );
+    m_pOwner = pOwner;
+}
+
+PdfOwnedDataType & PdfOwnedDataType::operator=( const PdfOwnedDataType & rhs )
+{
+    // NOTE: Don't copy owner. Objects being assigned will keep current ownership
+    PdfDataType::operator=( rhs );
+    return *this;
+}
+
+PdfVecObjects * PdfOwnedDataType::GetObjectOwner()
+{
+    return m_pOwner == NULL ? NULL : m_pOwner->GetOwner();
+}
 
 };
-
-};
-
-#endif // _PDF_FONT_TYPE1_BASE14_H_
-

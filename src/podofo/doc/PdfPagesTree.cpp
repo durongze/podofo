@@ -335,7 +335,6 @@ PdfObject* PdfPagesTree::GetPageNode( int nPageNum, PdfObject* pParent,
     const PdfArray & rKidsArray = pObj->GetArray(); 
     PdfArray::const_iterator it = rKidsArray.begin();
 
-    const size_t numDirectKids = rKidsArray.size();
     const size_t numKids = GetChildCount(pParent);
 
     // use <= since nPageNum is 0-based
@@ -347,62 +346,25 @@ PdfObject* PdfPagesTree::GetPageNode( int nPageNum, PdfObject* pParent,
         return NULL;
     }
 
-    //printf("Fetching: %i %i %i\n", numDirectKids, numKids, nPageNum );
-    if( numDirectKids == numKids && static_cast<size_t>(nPageNum) < numDirectKids )
+    //printf("Fetching: %i %i\n", numKids, nPageNum );
+
+    // We have to traverse the tree
+    //
+    // BEWARE: There is no valid shortcut for tree traversal.
+    // Even if eKidsArray.size()==numKids, this does not imply that
+    // eKidsArray can be accessed with the index of the page directly.
+    // The tree could have an arbitrary complex structure because
+    // internal nodes with no leaves (page objects) are not forbidden
+    // by the PDF spec.
+    while( it != rKidsArray.end() ) 
     {
-        // This node has only page nodes as kids,
-        // so we can access the array directly
-        rLstParents.push_back( pParent );
-        return GetPageNodeFromArray( nPageNum, rKidsArray, rLstParents );
-    } 
-    else
-    {
-        // We have to traverse the tree
-        while( it != rKidsArray.end() ) 
+        if(!(*it).IsReference() ) 
         {
-            if( (*it).IsArray() ) 
-            { // Fixes PDFs broken by having trees with arrays nested once
-                
-                rLstParents.push_back( pParent );
+            PdfError::LogMessage( eLogSeverity_Critical, "Requesting page index %i. Invalid datatype in kids array: %s\n", 
+                                  nPageNum, (*it).GetDataTypeString()); 
+            return NULL;
+        }
 
-                // the following code is to find the reference to log this with
-                const PdfReference & rIterArrayRef = (*it).Reference();
-                PdfReference refToLog;
-                bool isDirectObject // don't worry about 0-num. indirect ones
-                    = ( !(rIterArrayRef.ObjectNumber() ) );
-                if ( isDirectObject ) 
-		{
-                    if ( !(pObj->Reference().ObjectNumber() ) ) // rKidsArray's
-		    {
-                        refToLog = pParent->Reference();
-                    }
-		    else
-                    {
-                        refToLog = pObj->Reference();
-                    }
-                }
-                else
-                {
-                    refToLog = rIterArrayRef;
-                }
-                PdfError::LogMessage( eLogSeverity_Error,
-                                    "Entry in Kids array is itself an array"
-                    "%s reference: %s\n", isDirectObject ? " (direct object)"
-                    ", in object with" : ",", refToLog.ToString().c_str() );
-
-                    const PdfArray & rIterArray = (*it).GetArray();
-
-                    // is the array large enough to potentially have the page?
-                    if( static_cast<size_t>(nPageNum) < rIterArray.GetSize() )
-                    {
-                        PdfObject* pPageNode = GetPageNodeFromArray( nPageNum,
-                                                    rIterArray, rLstParents );
-                        if ( pPageNode ) // and if not, search further
-                            return pPageNode;
-                    }
-            }
-            else if( (*it).IsReference() ) 
-            {
                 PdfObject* pChild = GetRoot()->GetOwner()->GetObject( (*it).GetReference() );
                 if (!pChild) 
                 {
@@ -416,13 +378,28 @@ PdfObject* PdfPagesTree::GetPageNode( int nPageNum, PdfObject* pParent,
                     int childCount = GetChildCount( pChild );
                     if( childCount < nPageNum + 1 ) // Pages are 0 based, but count is not
                     {
-                        // skip this page node
-                        // and go to the next one
+                        // skip this page tree node
+                        // and go to the next child in rKidsArray
                         nPageNum -= childCount;
                     }
                     else
                     {
+                        // page is in the subtree of pChild
+                        // => call GetPageNode() recursively
+                        
                         rLstParents.push_back( pParent );
+
+                        if ( std::find( rLstParents.begin(), rLstParents.end(), pChild )
+                             != rLstParents.end() ) // cycle in parent list detected, fend
+                        { // off security vulnerability similar to CVE-2017-8054 (infinite recursion)
+                            std::ostringstream oss;
+                            oss << "Cycle in page tree: child in /Kids array of object "
+                                << ( *(rLstParents.rbegin()) )->Reference().ToString()
+                                << " back-references to object " << pChild->Reference()
+                                .ToString() << " one of whose descendants the former is.";
+                            PODOFO_RAISE_ERROR_INFO( ePdfError_PageNotFound, oss.str() );
+                        }
+
                         return this->GetPageNode( nPageNum, pChild, rLstParents );
                     }
                 }
@@ -430,6 +407,7 @@ PdfObject* PdfPagesTree::GetPageNode( int nPageNum, PdfObject* pParent,
                 {
                     if( 0 == nPageNum )
                     {
+                        // page found
                         rLstParents.push_back( pParent );
                         return pChild;
                     } 
@@ -448,95 +426,11 @@ PdfObject* PdfPagesTree::GetPageNode( int nPageNum, PdfObject* pParent,
                         "Invalid datatype referenced in kids array: %s\n"
                         "Reference to invalid object: %i %i R\n", nPageNum,
                         pChild->GetDataTypeString(), nLogObjNum, nLogGenNum);
+                    return NULL;
                 }
-            }
-            else
-            {
-                PdfError::LogMessage( eLogSeverity_Critical, "Requesting page index %i. Invalid datatype in kids array: %s\n", 
-                                      nPageNum, (*it).GetDataTypeString()); 
-                return NULL;
-            }
             
             ++it;
         }
-    }
-
-    return NULL;
-}
-
-PdfObject* PdfPagesTree::GetPageNodeFromArray( int nPageNum, const PdfArray & rKidsArray, PdfObjectList & rLstParents )
-{
-    if( static_cast<size_t>(nPageNum) >= rKidsArray.GetSize() )
-    {
-        PdfError::LogMessage( eLogSeverity_Critical, "Requesting page index %i from array of size %i\n", 
-                              nPageNum, rKidsArray.size() );
-        return NULL;
-    }
-
-    // TODO: Fill cache immediately with all pages 
-    //       in this kids array
-    PdfVariant rVar = rKidsArray[nPageNum];
-    while( true ) 
-    {
-        if( rVar.IsArray() ) 
-        {
-            // Fixes some broken PDFs who have trees with 1 element kids arrays
-            // Recursive call removed to prevent stack overflow (CVE-2017-8054)
-            // replaced by the following inside this conditional incl. continue
-            const PdfArray & rVarArray = rVar.GetArray();
-            if (rVarArray.GetSize() == 0)
-            {
-                PdfError::LogMessage( eLogSeverity_Critical, "Trying to access"
-                    " first page index of empty array" );
-                return NULL;
-            }
-            PdfVariant rVarFirstEntry = rVarArray[0]; // avoids use-after-free
-            rVar = rVarFirstEntry; // in this line (rVar-ref'd array is freed)
-            continue;
-        }
-        else if( !rVar.IsReference() )
-        {
-            PODOFO_RAISE_ERROR_INFO( ePdfError_NotImplemented, "Cannot handle inline pages." );
-        }
-
-        PdfObject* pgObject = GetRoot()->GetOwner()->GetObject( rVar.GetReference() );
-		if(pgObject==NULL)
-        {
-			PODOFO_RAISE_ERROR_INFO( ePdfError_PageNotFound, "Invalid reference." );
-		}
-
-        //printf("Reading %s\n", pgObject->Reference().ToString().c_str());
-        // make sure the object is a /Page and not a /Pages with a single kid
-        if( this->IsTypePage(pgObject) ) 
-        {
-            return pgObject;
-        }
-
-        // it's a /Pages with a single kid, so dereference and try again...
-        if (this->IsTypePages(pgObject) ) 
-        {
-            if( !pgObject->GetDictionary().HasKey( "Kids" ) )
-                return NULL;
-
-            if ( std::find( rLstParents.begin(), rLstParents.end(), pgObject )
-                != rLstParents.end() ) // cycle in parent list detected, fend
-            { // off security vulnerability CVE-2017-8054 (infinite recursion)
-                std::ostringstream oss;
-                oss << "Cycle in page tree: child in /Kids array of object "
-                    << ( *(rLstParents.rbegin()) )->Reference().ToString()
-                    << " back-references to object " << pgObject->Reference()
-                    .ToString() << " one of whose descendants the former is.";
-
-                PODOFO_RAISE_ERROR_INFO( ePdfError_PageNotFound, oss.str() );
-            }
-
-            rLstParents.push_back( pgObject );
-            rVar = *(pgObject->GetDictionary().GetKey( "Kids" ));
-        } else {
-            // Reference to unexpected object
-            PODOFO_RAISE_ERROR_INFO( ePdfError_PageNotFound, "Reference to unexpected object." );
-        }
-    }
 
     return NULL;
 }
@@ -546,7 +440,7 @@ bool PdfPagesTree::IsTypePage(const PdfObject* pObject) const
     if( !pObject )
         return false;
 
-    if( pObject->GetDictionary().GetKeyAsName( PdfName( "Type" ) ) == PdfName( "Page" ) )
+    if( pObject->GetIndirectKeyAsName( PdfName( "Type" ) ) == PdfName( "Page" ) )
         return true;
 
     return false;
@@ -557,7 +451,7 @@ bool PdfPagesTree::IsTypePages(const PdfObject* pObject) const
     if( !pObject )
         return false;
 
-    if( pObject->GetDictionary().GetKeyAsName( PdfName( "Type" ) ) == PdfName( "Pages" ) )
+    if( pObject->GetIndirectKeyAsName( PdfName( "Type" ) ) == PdfName( "Pages" ) )
         return true;
 
     return false;
@@ -585,7 +479,7 @@ int PdfPagesTree::GetPosInKids( PdfObject* pPageObj, PdfObject* pPageParent )
         return -1;
     }
 
-    const PdfArray & rKids = pPageParent->GetDictionary().GetKey( PdfName("Kids") )->GetArray();
+    const PdfArray & rKids = pPageParent->MustGetIndirectKey( PdfName("Kids") )->GetArray();
     PdfArray::const_iterator it = rKids.begin();
 
     int index = 0;
@@ -619,7 +513,7 @@ void PdfPagesTree::InsertPageIntoNode( PdfObject* pParent, const PdfObjectList &
     // 3. Add Parent key to the page
 
     // 1. Add reference
-    const PdfArray oldKids = pParent->GetDictionary().GetKey( PdfName("Kids") )->GetArray();
+    const PdfArray oldKids = pParent->MustGetIndirectKey( PdfName("Kids") )->GetArray();
     PdfArray::const_iterator it = oldKids.begin();
     PdfArray newKids;
 
@@ -677,7 +571,7 @@ void PdfPagesTree::InsertPagesIntoNode( PdfObject* pParent, const PdfObjectList 
     // 3. Add Parent key to the page
 
     // 1. Add reference
-    const PdfArray oldKids = pParent->GetDictionary().GetKey( PdfName("Kids") )->GetArray();
+    const PdfArray oldKids = pParent->MustGetIndirectKey( PdfName("Kids") )->GetArray();
     PdfArray newKids;
     newKids.reserve( oldKids.GetSize() + vecPages.size() );
 
@@ -769,7 +663,7 @@ void PdfPagesTree::DeletePageFromNode( PdfObject* pParent, const PdfObjectList &
 
 void PdfPagesTree::DeletePageNode( PdfObject* pParent, int nIndex ) 
 {
-    PdfArray kids = pParent->GetDictionary().GetKey( PdfName("Kids") )->GetArray();
+    PdfArray kids = pParent->MustGetIndirectKey( PdfName("Kids") )->GetArray();
     kids.erase( kids.begin() + nIndex );
     pParent->GetDictionary().AddKey( PdfName("Kids"), kids );
 }
@@ -795,7 +689,7 @@ bool PdfPagesTree::IsEmptyPageNode( PdfObject* pPageNode )
 
     if( pPageNode->GetDictionary().HasKey( PdfName("Kids") ) )
     {
-        bKidsEmpty = pPageNode->GetDictionary().GetKey( PdfName("Kids") )->GetArray().empty();
+        bKidsEmpty = pPageNode->MustGetIndirectKey( PdfName("Kids") )->GetArray().empty();
     }
 
     return ( lCount == 0L || bKidsEmpty );

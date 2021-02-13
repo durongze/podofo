@@ -60,7 +60,6 @@ class PdfOutputDevice;
  */
 class PODOFO_API PdfReference : public PdfDataType {
  public:
-	 void DumpInfo();
     /**
      * Create a PdfReference with object number and generation number
      * initialized to 0.

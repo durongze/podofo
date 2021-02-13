@@ -285,6 +285,12 @@ void PdfEncoding::ParseToUnicode()
             
             if (strcmp (streamToken, "beginbfrange") == 0)
             {
+                // need 2 entries - one to pop() and one for top()
+                if ( stkToken.size() < 2 )
+                {
+                    PODOFO_RAISE_ERROR_INFO(ePdfError_InvalidStream, "CMap missing object number before beginbfrange");
+                }
+                
                 i = loop = 0;
                 in_beginbfrange = 1;
                 stkToken.pop ();
@@ -301,6 +307,12 @@ void PdfEncoding::ParseToUnicode()
             
             if (strcmp (streamToken, "beginbfchar") == 0)
             {
+                // need 2 entries - one to pop() and one for top()
+                if ( stkToken.size() < 2 )
+                {
+                    PODOFO_RAISE_ERROR_INFO(ePdfError_InvalidStream, "CMap missing object number before beginbfchar");
+                }
+                
                 i = loop = 0;
                 in_beginbfchar = 1;
                 stkToken.pop ();
@@ -1603,6 +1615,7 @@ const pdf_utf16be PdfStandardEncoding::s_cEncoding[256] = {
     0x0000,  // C9 undefined
     0x02DA,  // CA   # RING ABOVE   # ring
     0x00B8,  // CB   # CEDILLA   # cedilla
+    0x0000,  // CC undefined
     0x02DD,  // CD   # DOUBLE ACUTE ACCENT   # hungarumlaut
     0x02DB,  // CE   # OGONEK   # ogonek
     0x02C7,  // CF   # CARON   # caron

@@ -188,6 +188,18 @@ void PdfFontCID::Init( bool bEmbed, bool bSubset )
         // The FontDescriptor, should be an indirect object:
         m_pDescendantFonts->GetDictionary().AddKey( "FontDescriptor", pDescriptor->Reference() );
         m_pDescendantFonts->GetDictionary().AddKey( "CIDToGIDMap", PdfName("Identity") );
+
+        if( !bSubset )
+        {
+            // Add the width keys
+            this->CreateWidth( m_pDescendantFonts );
+
+            // Create the ToUnicode CMap
+            PdfObject* pUnicode = this->GetObject()->GetOwner()->CreateObject();
+
+            this->CreateCMap( pUnicode );
+            this->GetObject()->GetDictionary().AddKey( "ToUnicode", pUnicode->Reference() );
+        }
     }
 
     // Setting the FontDescriptor paras:
@@ -410,18 +422,18 @@ void PdfFontCID::CreateWidth( PdfObject* pFontDict ) const
                     array.push_back( lCurIndex );
                     pdf_int64 temp = lCurIndex + lCurLength - 1;
                     array.push_back( temp ); 
-                    array.push_back( dCurWidth ); 
+                    array.push_back( static_cast<pdf_int64>(dCurWidth + 0.5) );
                 }
                 else
                 {
                     if( array.size() && array.back().IsArray() ) 
                     {
-                        array.back().GetArray().push_back( dCurWidth );
+                        array.back().GetArray().push_back( static_cast<pdf_int64>(dCurWidth + 0.5) );
                     }
                     else
                     {
                         PdfArray tmp;
-                        tmp.push_back( dCurWidth );
+                        tmp.push_back( static_cast<pdf_int64>(dCurWidth + 0.5) );
                         
                         array.push_back( lCurIndex );
                         array.push_back( tmp );
@@ -438,7 +450,7 @@ void PdfFontCID::CreateWidth( PdfObject* pFontDict ) const
         {
             array.push_back( lCurIndex = nMin );
             array.push_back( lCurIndex = nMax );
-            array.push_back( dCurWidth ); 
+            array.push_back( static_cast<pdf_int64>(dCurWidth + 0.5) );
         }
         
         pFontDict->GetDictionary().AddKey( PdfName("W"), array ); 
@@ -447,12 +459,12 @@ void PdfFontCID::CreateWidth( PdfObject* pFontDict ) const
     podofo_free( pdWidth );
 }
 
-void PdfFontCID::CreateCMap( PdfObject* PODOFO_UNUSED_PARAM(pUnicode) ) const
+void PdfFontCID::CreateCMap( PdfObject* pUnicode ) const
 {
     GidToCodePoint gidToCodePoint;
     if (fillGidToCodePoint(gidToCodePoint, m_pMetrics)) 
     {
-        //createCMap(pUnicode, gidToCodePoint, m_pEncoding->GetFirstChar(), m_pEncoding->GetLastChar(), m_pEncoding->IsSingleByteEncoding() );
+        fillUnicodeStream( pUnicode->GetStream(), gidToCodePoint, m_pEncoding->GetFirstChar(), m_pEncoding->GetLastChar(), m_pEncoding->IsSingleByteEncoding() );
     }
 }
 

@@ -46,24 +46,6 @@
 
 namespace PoDoFo {
 
-void PdfPage::DumpInfo(PdfDocument *doc)
-{
-	int numField = GetNumFields();
-	int numAnnot = GetNumAnnots();
-	LogInfo("NumFields:%d\n", numField);
-	LogInfo("NumAnnots:%d\n", numAnnot);
-	PdfAnnotation *annot = NULL;
-	for (int i = 0; i < numAnnot; i++) {
-		annot = this->GetAnnotation(i);
-		if (annot) {
-			annot->DumpInfo(doc);
-			// doc->DumpObject(this, 947 + i, 0);
-		}
-	}
-	m_pResources->DumpInfo();
-	m_pContents->DumpInfo();
-}
-
 PdfPage::PdfPage( const PdfRect & rSize, PdfDocument* pParent )
     : PdfElement( "Page", pParent ), PdfCanvas(), m_pContents( NULL )
 {
@@ -243,7 +225,7 @@ const PdfObject* PdfPage::GetInheritedKeyFromObject( const char* inKey, const Pd
     // check for it in the object itself
     if ( inObject->GetDictionary().HasKey( inKey ) ) 
     {
-        pObj = inObject->GetDictionary().GetKey( inKey );
+        pObj = inObject->MustGetIndirectKey( inKey );
         if ( !pObj->IsNull() ) 
             return pObj;
     }
@@ -287,13 +269,6 @@ const PdfRect PdfPage::GetPageBox( const char* inBox ) const
     // Take advantage of inherited values - walking up the tree if necessary
     pObj = GetInheritedKeyFromObject( inBox, this->GetObject() );
     
-
-    // Sometime page boxes are defined using reference objects
-    while ( pObj && pObj->IsReference() )
-    {
-        pObj = this->GetObject()->GetOwner()->GetObject( pObj->GetReference() );
-    }
-
     // assign the value of the box from the array
     if ( pObj && pObj->IsArray() )
     {
@@ -468,7 +443,7 @@ void PdfPage::DeleteAnnotation( const PdfReference & ref )
     PdfObject*         pObj   = this->GetAnnotationsArray( false );
     bool               bFound = false;
 
-    // delete the annotation from the array
+    // find the array iterator pointing to the annotation, so it can be deleted later
 
     if( !(pObj && pObj->IsArray()) )
     {
@@ -480,7 +455,10 @@ void PdfPage::DeleteAnnotation( const PdfReference & ref )
     {
         if( (*it).IsReference() && (*it).GetReference() == ref ) 
         {
-            pObj->GetArray().erase( it );
+            // Element may not be deleted from the array at this point, because doing
+            // this invalidates all PdfReferences references derived from the array.
+            // This includes the 'ref' parameter, when it is never copied by value,
+            // as it happens when this function is called via DeleteAnnotation( int )!
             bFound = true;
             break;
         }
@@ -506,6 +484,11 @@ void PdfPage::DeleteAnnotation( const PdfReference & ref )
 
     // delete the PdfObject in the file
     delete this->GetObject()->GetOwner()->RemoveObject( ref );
+    
+    // Delete the annotation from the annotation array.
+	// Has to be performed at last, since it will invalidate 'ref' when
+	// it was derived from the array itself and never copied by value!
+    pObj->GetArray().erase( it );
 }
 
 // added by Petr P. Petrov 21 Febrary 2010
@@ -613,9 +596,16 @@ unsigned int PdfPage::GetPageNumber() const
             while( it != kids.end() && (*it).GetReference() != ref )
             {
                 PdfObject* pNode = this->GetObject()->GetOwner()->GetObject( (*it).GetReference() );
+                if (!pNode)
+                {
+                    std::ostringstream oss;
+                    oss << "Object " << (*it).GetReference().ToString() << " not found from Kids array "
+                        << pKids->Reference().ToString(); 
+                    PODOFO_RAISE_ERROR_INFO( ePdfError_NoObject, oss.str() );
+                }
 
-                if( pNode->GetDictionary().GetKey( PdfName::KeyType ) != NULL 
-                    && pNode->GetDictionary().GetKey( PdfName::KeyType )->GetName() == PdfName( "Pages" ) )
+                if( pNode->GetDictionary().HasKey( PdfName::KeyType )
+                    && pNode->MustGetIndirectKey( PdfName::KeyType )->GetName() == PdfName( "Pages" ) )
                 {
                     PdfObject* pCount = pNode->GetIndirectKey( "Count" );
                     if( pCount != NULL ) {
@@ -691,6 +681,10 @@ const PdfField PdfPage::GetField( int index ) const
 
 PdfObject* PdfPage::GetFromResources( const PdfName & rType, const PdfName & rKey )
 {
+    if( m_pResources == NULL ) // Fix CVE-2017-7381
+    {
+        PODOFO_RAISE_ERROR_INFO( ePdfError_InvalidHandle, "No Resources" );
+    } 
     if( m_pResources->GetDictionary().HasKey( rType ) ) 
     {
         // OC 15.08.2010 BugFix: Ghostscript creates here sometimes an indirect reference to a directory
@@ -727,11 +721,7 @@ PdfObject* PdfPage::GetOwnAnnotationsArray( bool bCreate, PdfDocument *pDocument
             }
 
             pObj = pDocument->GetObjects()->GetObject( pObj->GetReference() );
-            if(pObj) {
-               pObj->SetOwner(this->GetObject()->GetOwner());
-            }
-         } else
-            pObj->SetOwner( this->GetObject()->GetOwner() );// even directs might want an owner...
+         }
       }
 
       if( pObj && pObj->IsArray() )

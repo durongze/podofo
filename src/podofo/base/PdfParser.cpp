@@ -72,6 +72,7 @@ using std::flush;
 
 namespace PoDoFo {
 
+bool PdfParser::s_bIgnoreBrokenObjects = true;
 const long nMaxNumIndirectObjects = (1L << 23) - 1L;
 long PdfParser::s_nMaxObjects = nMaxNumIndirectObjects;
   
@@ -168,10 +169,10 @@ PdfParser::~PdfParser()
 
 void PdfParser::Init() 
 {
-    m_bLoadOnDemand   = false;//需要时加载
+    m_bLoadOnDemand   = false;
 
     m_device          = PdfRefCountedInputDevice();
-    m_pTrailer        = NULL;//拖拉 痕迹
+    m_pTrailer        = NULL;
     m_pLinearization  = NULL;
     m_offsets.clear();
 
@@ -185,9 +186,8 @@ void PdfParser::Init()
     m_nXRefLinearizedOffset = 0;
     m_lLastEOFOffset  = 0;
 
-    m_bIgnoreBrokenObjects = false;
     m_nIncrementalUpdates = 0;
-    m_nRecursionDepth = 0; //递归的深度
+    m_nRecursionDepth = 0;
 }
 
 void PdfParser::ParseFile( const char* pszFilename, bool bLoadOnDemand )
@@ -791,6 +791,15 @@ void PdfParser::ReadXRefContents( pdf_long lOffset, bool bPositionAtEnd )
     }
 }
 
+static bool CheckEOL( char e1, char e2 )
+{   
+    // From pdf reference, page 94:
+    // If the file's end-of-line marker is a single character (either a carriage return or a line feed),
+    // it is preceded by a single space; if the marker is 2 characters (both a carriage return and a line feed),
+    // it is not preceded by a space.            
+    return ( (e1 == '\r' && e2 == '\n') || (e1 == '\n' && e2 == '\r') || (e1 == ' ' && (e2 == '\r' || e2 == '\n')) );
+}
+
 void PdfParser::ReadXRefSubsection( pdf_int64 & nFirstObject, pdf_int64 & nNumObjects )
 {
     pdf_int64 count = 0;
@@ -895,10 +904,11 @@ void PdfParser::ReadXRefSubsection( pdf_int64 & nFirstObject, pdf_int64 & nNumOb
             // nnnnnnnnnn ggggg n eol
             // nnnnnnnnnn is 10-digit offset number with max value 9999999999 (bigger than 2**32 = 4GB)
             // ggggg is a 5-digit generation number with max value 99999 (smaller than 2**17)
+            // eol is a 2-character end-of-line sequence
             int read = sscanf( m_buffer.GetBuffer(), "%10" PDF_FORMAT_INT64 " %5" PDF_FORMAT_INT64 " %c%c%c",
                               &llOffset, &llGeneration, &cUsed, &empty1, &empty2 );
             
-            if ( read != 5 )
+            if ( read != 5 || !CheckEOL( empty1, empty2 ) )
             {
                 // part of XrefEntry is missing, or i/o error
                 PODOFO_RAISE_ERROR( ePdfError_InvalidXRef );
@@ -1168,7 +1178,7 @@ void PdfParser::ReadObjectsInternal()
                     << " Index = " << i << std::endl;
                 delete pObject;
 
-                if( m_bIgnoreBrokenObjects ) 
+                if( s_bIgnoreBrokenObjects )
                 {
                     PdfError::LogMessage( eLogSeverity_Error, oss.str().c_str() );
                     m_vecObjects->AddFreeObject( PdfReference( i, 0 ) );
@@ -1242,7 +1252,7 @@ void PdfParser::ReadObjectsInternal()
              itObjects != m_vecObjects->end();
              ++itObjects)
         {
-            pObject = dynamic_cast<PdfParserObject*>(*itObjects);
+            const PdfParserObject* pObject = dynamic_cast<PdfParserObject*>(*itObjects);
             // only parse streams for objects that have not yet parsed
             // their streams
             if( pObject && pObject->HasStreamToParse() && !pObject->HasStream() )
@@ -1294,7 +1304,15 @@ void PdfParser::ReadObjectFromStream( int nObjNo, int )
         std::ostringstream oss;
         oss << "Loading of object " << nObjNo << " 0 R failed!" << std::endl;
 
-        PODOFO_RAISE_ERROR_INFO( ePdfError_NoObject, oss.str().c_str() );
+        if( s_bIgnoreBrokenObjects )
+        {
+            PdfError::LogMessage( eLogSeverity_Error, oss.str().c_str() );
+            return;
+        }
+        else
+        {
+            PODOFO_RAISE_ERROR_INFO( ePdfError_NoObject, oss.str().c_str() );
+        }
     }
     
 
@@ -1308,7 +1326,7 @@ void PdfParser::ReadObjectFromStream( int nObjNo, int )
 		}
 	}
     
-    PdfObjectStreamParserObject pParserObject( pStream, m_vecObjects, m_buffer, m_pEncrypt );
+    PdfObjectStreamParserObject pParserObject( pStream, m_vecObjects, m_buffer );
     pParserObject.Parse( list );
 }
 
@@ -1427,7 +1445,7 @@ void PdfParser::UpdateDocumentVersion()
             && pCatalog->IsDictionary() 
             && pCatalog->GetDictionary().HasKey( PdfName("Version" ) ) ) 
         {
-            PdfObject* pVersion = pCatalog->GetDictionary().GetKey( PdfName( "Version" ) );
+            PdfObject* pVersion = pCatalog->MustGetIndirectKey( PdfName( "Version" ) );
             for(int i=0;i<=MAX_PDF_VERSION_STRING_INDEX;i++)
             {
                 if( IsStrictParsing() && !pVersion->IsName())

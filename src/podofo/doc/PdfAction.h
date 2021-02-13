@@ -84,7 +84,6 @@ class PODOFO_DOC_API PdfAction : public PdfElement {
     friend class PdfAnnotation;
 
  public:
-	 void DumpInfo();
     /** Create a new PdfAction object
      *  \param eAction type of this action
      *  \param pParent parent of this action

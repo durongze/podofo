@@ -56,7 +56,7 @@ const PdfEncoding *PdfEncodingObjectFactory::CreateEncoding (PdfObject *pObject,
     if (pObject->IsReference ())
     {
         // resolve any references
-        pObject = pObject->GetOwner ()->GetObject (pObject->GetReference ());
+        pObject = pObject->GetOwner ()->MustGetObject (pObject->GetReference ());
     }
 
     if (pObject->IsName ())
@@ -71,6 +71,8 @@ const PdfEncoding *PdfEncodingObjectFactory::CreateEncoding (PdfObject *pObject,
         else if (rName == PdfName ("MacExpertEncoding"))	// OC 13.08.2010 TODO solved
             return PdfEncodingFactory::GlobalMacExpertEncodingInstance ();
         else if (rName == PdfName ("SymbolEncoding"))	// OC 13.08.2010
+            return PdfEncodingFactory::GlobalSymbolEncodingInstance ();
+        else if (rName == PdfName ("SymbolSetEncoding"))	// CB 21.02.2019
             return PdfEncodingFactory::GlobalSymbolEncodingInstance ();
         else if (rName == PdfName ("ZapfDingbatsEncoding"))	// OC 13.08.2010
             return PdfEncodingFactory::GlobalZapfDingbatsEncodingInstance ();

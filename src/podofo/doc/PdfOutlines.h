@@ -70,7 +70,6 @@ enum EPdfOutlineFormat {
  */
 class PODOFO_DOC_API PdfOutlineItem : public PdfElement {
  public:
-	 void DumpInfo(PdfDocument* pDoc);
     virtual ~PdfOutlineItem();
 
     /** Create a PdfOutlineItem that is a child of this item
@@ -322,7 +321,7 @@ inline PdfOutlineItem* PdfOutlineItem::Next() const
  */
 class PODOFO_DOC_API PdfOutlines : public PdfOutlineItem {
  public:
-	 void DumpInfo(PdfDocument* pDoc, int level);
+   
     /** Create a new PDF outlines dictionary
      *  \param pParent parent vector of objects
      */

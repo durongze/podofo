@@ -212,9 +212,10 @@ inline wchar_t* AnsiToUnicode(const char* szStr)
 	pResult = new wchar_t[nLen];
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, pResult, nLen);
 #else
-    nLen = strlen(szStr);
+    nLen = strlen(szStr) + 1;
 	pResult = new wchar_t[nLen];
-	mbstowcs(pResult, szStr, nLen);
+	setlocale(LC_ALL, "en_GB.UTF8");
+	mbstowcs(pResult, szStr, nLen + 1);
 #endif
 	return pResult;
 }
@@ -232,7 +233,8 @@ inline char* UnicodeToAnsi(const wchar_t* szStr)
 	pResult = new char[nLen];
 	WideCharToMultiByte(CP_ACP, 0, szStr, -1, pResult, nLen, NULL, NULL);
 #else
-    nLen = wcslen(szStr);
+	setlocale(LC_ALL, "en_GB.UTF8");
+    nLen = wcslen(szStr) + 1;
 	pResult = new char[nLen];
 	wcstombs(pResult, szStr, nLen);
 #endif
@@ -429,7 +431,6 @@ int AddBookMarkBy(PdfMemDocument &doc, PdfOutlineItem*& bmRoot,
 		xmlItemA = xmlItem->FirstChildElement();
 		itemHref = xmlItemA->Attribute("href");
 		itemText = xmlItemA->GetText();
-		LogInfo("Text:%s\n", itemText);
 	}
 	return 0;
 }
@@ -437,7 +438,6 @@ int AddBookMarkBy(PdfMemDocument &doc, PdfOutlineItem*& bmRoot,
 int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 {
 	const char *xmlBookHref = NULL;
-	docFirst.DumpInfo();
 	TiXmlDocument xmlBm;
 	
 	xmlBm.LoadFile(bm);
@@ -454,7 +454,6 @@ int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 	for (xmlRoot = xmlBody->FirstChildElement(); 
 		xmlRoot != NULL && xmlRoot->FirstChildElement() == NULL;
 		xmlRoot = xmlRoot->NextSiblingElement()) {
-		LogInfo("%s\n", xmlRoot->GetText());
 	}
 	
 	AddBookMarkBy(docFirst, bmRoot, xmlRoot);
@@ -466,8 +465,6 @@ int MergeDoc(const char *firstFile, const char *secondFile, const char *doc, con
 {
 	PdfMemDocument docFirst(firstFile);
 	PdfMemDocument docSecond(secondFile);
-
-	docFirst.DumpInfo();
 
 	docFirst.Append(docSecond);
 
@@ -878,8 +875,8 @@ int XmlMain(std::string fname, int pageoffset)
 
 int main( int argc, char* argv[] )
 {
-	std::string fileName = "kuang_jia_jie_mi";
-    std::string genXmlCmd = "copy bak.xml ";
+	std::string fileName = "shen_ru_li_jie_android2";
+    std::string genXmlCmd = "cp bak.xml ";
     genXmlCmd += fileName + ".xml";
 	system("ls");
     system(genXmlCmd.c_str());
@@ -887,7 +884,7 @@ int main( int argc, char* argv[] )
 	// SetConsoleOutputCP(CP_UTF8);
 	// SetConsoleOutputCP(CP_ACP);
 	PdfMemDocument doc((fileName + ".pdf").c_str());
-	doc.DumpInfo();
+
 	AddBookMark(doc, (fileName + ".xml").c_str());
 	doc.Write((fileName + "_bm.pdf").c_str());
 

@@ -54,16 +54,6 @@ const char* PdfDestination::s_names[] = {
     "FitBV",
     NULL
 };
-void PdfDestination::DumpInfo(PdfDocument* pDoc)
-{
-	PdfPage* pPage = GetPage(pDoc);
-	if (pPage != NULL) {
-		int pNo = pPage->GetPageNumber();
-		LogInfo("Page : %d\n", pNo);
-	} else {
-		LogInfo("Page #\n");
-	}
-}
 
 PdfDestination::PdfDestination( PdfVecObjects* pParent )
 {
@@ -228,7 +218,7 @@ void PdfDestination::Init( PdfObject* pObject, PdfDocument* pDocument )
         if( pValue->IsArray() ) 
             m_array = pValue->GetArray();
         else if( pValue->IsDictionary() )
-            m_array = pValue->GetDictionary().GetKey( "D" )->GetArray();
+            m_array = pValue->MustGetIndirectKey( "D" )->GetArray();
         m_pObject = pValue;
     }
 }

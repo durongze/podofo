@@ -60,37 +60,7 @@ const char* PdfAction::s_names[] = {
     "GoTo3DView",
     NULL
 };
-void PdfAction::DumpInfo()
-{
-	EPdfAction actType = GetType();
 
-	LogInfo("type:%d\n", actType);
-	
-	switch (actType) {
-		case ePdfAction_GoTo:
-		ePdfAction_GoToR:
-		ePdfAction_GoToE:
-		ePdfAction_Launch:
-		ePdfAction_Thread:
-		ePdfAction_URI:
-		ePdfAction_Sound:
-		ePdfAction_Movie:
-		ePdfAction_Hide:
-		ePdfAction_Named:
-		ePdfAction_SubmitForm:
-		ePdfAction_ResetForm:
-		ePdfAction_ImportData:
-		ePdfAction_JavaScript:
-		ePdfAction_SetOCGState:
-		ePdfAction_Rendition:
-		ePdfAction_Trans:
-		ePdfAction_GoTo3DView:
-		ePdfAction_RichMediaExecute:
-			break;
-		default:
-			break;
-	}
-}
 PdfAction::PdfAction( EPdfAction eAction, PdfVecObjects* pParent )
     : PdfElement( "Action", pParent ), m_eType( eAction )
 {
@@ -121,13 +91,13 @@ PdfAction::PdfAction( PdfObject* pObject )
     // The typename /Action is optional for PdfActions
     : PdfElement( NULL, pObject )
 {
-    m_eType = static_cast<EPdfAction>(TypeNameToIndex( this->GetObject()->GetDictionary().GetKeyAsName( "S" ).GetName().c_str(), s_names, s_lNumActions, ePdfAction_Unknown ));
+    m_eType = static_cast<EPdfAction>(TypeNameToIndex( this->GetObject()->GetIndirectKeyAsName( "S" ).GetName().c_str(), s_names, s_lNumActions, ePdfAction_Unknown ));
 }
 
 PdfAction::PdfAction( const PdfAction & rhs )
     : PdfElement( "Action", rhs.GetNonConstObject() )
 {
-    m_eType = static_cast<EPdfAction>(TypeNameToIndex( this->GetObject()->GetDictionary().GetKeyAsName( "S" ).GetName().c_str(), s_names, s_lNumActions, ePdfAction_Unknown ));
+    m_eType = static_cast<EPdfAction>(TypeNameToIndex( this->GetObject()->GetIndirectKeyAsName( "S" ).GetName().c_str(), s_names, s_lNumActions, ePdfAction_Unknown ));
 }
 
 void PdfAction::SetURI( const PdfString & sUri )
@@ -137,7 +107,7 @@ void PdfAction::SetURI( const PdfString & sUri )
 
 PdfString PdfAction::GetURI() const
 {
-    return this->GetObject()->GetIndirectKey( "URI" )->GetString();
+    return this->GetObject()->MustGetIndirectKey( "URI" )->GetString();
 }
 
 bool PdfAction::HasURI() const
@@ -153,7 +123,7 @@ void PdfAction::SetScript( const PdfString & sScript )
 
 PdfString PdfAction::GetScript() const
 {
-    return this->GetObject()->GetDictionary().GetKey( "JS" )->GetString();
+    return this->GetObject()->MustGetIndirectKey( "JS" )->GetString();
 
 }
 

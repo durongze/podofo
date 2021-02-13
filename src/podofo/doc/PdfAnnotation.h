@@ -125,7 +125,6 @@ enum EPdfAnnotationAppearance {
  */
 class PODOFO_DOC_API PdfAnnotation : public PdfElement {
  public:
-	 void DumpInfo(PdfDocument *doc);
     /** Create a new annotation object
      *
      *  \param pPage the parent page of this annotation

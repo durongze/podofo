@@ -100,19 +100,13 @@ private:
     const PdfReference m_ref;
 };
 
+// This is static, IMHO (mabri) different values per-instance could cause confusion.
+// It has to be defined here because of the one-definition rule.
+size_t PdfVecObjects::m_nMaxReserveSize = static_cast<size_t>(8388607); // cf. Table C.1 in section C.2 of PDF32000_2008.pdf
+
 PdfVecObjects::PdfVecObjects()
     : m_bAutoDelete( false ), m_bCanReuseObjectNumbers( true ), m_nObjectCount( 1 ), m_bSorted( true ), m_pDocument( NULL ), m_pStreamFactory( NULL )
 {
-}
-
-void PdfVecObjects::DumpInfo()
-{
-	TIVecObjects iter;
-	int idx = 0;
-	for (iter = begin(); iter != end(); iter++)
-	{
-		LogInfo("idx : %d\n", idx++);
-	}
 }
 
 PdfVecObjects::~PdfVecObjects()
@@ -166,6 +160,14 @@ PdfObject* PdfVecObjects::GetObject( const PdfReference & ref ) const
     }
 
     return NULL;
+}
+
+PdfObject* PdfVecObjects::MustGetObject( const PdfReference & ref ) const
+{
+    PdfObject* obj = GetObject( ref );
+    if (!obj)
+        PODOFO_RAISE_ERROR( ePdfError_NoObject );
+    return obj;
 }
 
 size_t PdfVecObjects::GetIndex( const PdfReference & ref ) const

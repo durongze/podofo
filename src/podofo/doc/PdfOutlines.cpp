@@ -43,6 +43,7 @@
 #include "PdfDestination.h"
 
 namespace PoDoFo {
+
 PdfOutlineItem::PdfOutlineItem( const PdfString & sTitle, const PdfDestination & rDest, 
                                 PdfOutlineItem* pParentOutline, PdfVecObjects* pParent )
     : PdfElement( NULL, pParent ), 
@@ -78,13 +79,13 @@ PdfOutlineItem::PdfOutlineItem( PdfObject* pObject, PdfOutlineItem* pParentOutli
     if( this->GetObject()->GetDictionary().HasKey( "First" ) )
     {
         first    = this->GetObject()->GetDictionary().GetKey("First")->GetReference();
-        m_pFirst = new PdfOutlineItem( pObject->GetOwner()->GetObject( first ), this, NULL );
+        m_pFirst = new PdfOutlineItem( pObject->GetOwner()->MustGetObject( first ), this, NULL );
     }
 
     if( this->GetObject()->GetDictionary().HasKey( "Next" ) )
     {
         next     = this->GetObject()->GetDictionary().GetKey("Next")->GetReference();
-        PdfObject* pObj = pObject->GetOwner()->GetObject( next );
+        PdfObject* pObj = pObject->GetOwner()->MustGetObject( next );
 
         m_pNext  = new PdfOutlineItem( pObj, pParentOutline, this );
     }
@@ -101,19 +102,6 @@ PdfOutlineItem::PdfOutlineItem( PdfVecObjects* pParent )
     : PdfElement( "Outlines", pParent ), m_pParentOutline( NULL ), m_pPrev( NULL ), 
       m_pNext( NULL ), m_pFirst( NULL ), m_pLast( NULL ), m_pDestination( NULL ), m_pAction( NULL )
 {
-}
-
-void PdfOutlineItem::DumpInfo(PdfDocument* pDoc)
-{
-	LogInfo("Title:%s\n", GetTitle().GetStringUtf8());
-	PdfDestination *dest = GetDestination(pDoc);
-	if (dest) { 
-		dest->DumpInfo(pDoc);
-	}
-	PdfAction *act = GetAction();
-	if (act) {
-		act->DumpInfo();
-	}
 }
 
 PdfOutlineItem::~PdfOutlineItem()
@@ -347,7 +335,7 @@ void PdfOutlineItem::SetTitle( const PdfString & sTitle )
 
 const PdfString & PdfOutlineItem::GetTitle() const
 {
-    return this->GetObject()->GetIndirectKey( "Title" )->GetString();
+    return this->GetObject()->MustGetIndirectKey( "Title" )->GetString();
 }
 
 void PdfOutlineItem::SetTextFormat( EPdfOutlineFormat eFormat )
@@ -358,7 +346,7 @@ void PdfOutlineItem::SetTextFormat( EPdfOutlineFormat eFormat )
 EPdfOutlineFormat PdfOutlineItem::GetTextFormat() const
 {
     if( this->GetObject()->GetDictionary().HasKey( "F" ) )
-        return static_cast<EPdfOutlineFormat>(this->GetObject()->GetIndirectKey( "F" )->GetNumber());
+        return static_cast<EPdfOutlineFormat>(this->GetObject()->MustGetIndirectKey( "F" )->GetNumber());
 
     return ePdfOutlineFormat_Default;
 }
@@ -377,7 +365,7 @@ void PdfOutlineItem::SetTextColor( double r, double g, double b )
 double PdfOutlineItem::GetTextColorRed() const
 {
     if( this->GetObject()->GetDictionary().HasKey( "C" ) )
-        return this->GetObject()->GetIndirectKey( "C" )->GetArray()[0].GetReal();
+        return this->GetObject()->MustGetIndirectKey( "C" )->GetArray()[0].GetReal();
 
     return 0.0;
 }
@@ -385,7 +373,7 @@ double PdfOutlineItem::GetTextColorRed() const
 double PdfOutlineItem::GetTextColorGreen() const
 {
     if( this->GetObject()->GetDictionary().HasKey( "C" ) )
-        return this->GetObject()->GetIndirectKey( "C" )->GetArray()[1].GetReal();
+        return this->GetObject()->MustGetIndirectKey( "C" )->GetArray()[1].GetReal();
 
     return 0.0;
 }
@@ -393,7 +381,7 @@ double PdfOutlineItem::GetTextColorGreen() const
 double PdfOutlineItem::GetTextColorBlue() const
 {
     if( this->GetObject()->GetDictionary().HasKey( "C" ) )
-        return this->GetObject()->GetIndirectKey( "C" )->GetArray()[2].GetReal();
+        return this->GetObject()->MustGetIndirectKey( "C" )->GetArray()[2].GetReal();
 
     return 0.0;
 }
@@ -402,34 +390,6 @@ double PdfOutlineItem::GetTextColorBlue() const
 ///////////////////////////////////////////////////////////////////////////////////
 // PdfOutlines
 ///////////////////////////////////////////////////////////////////////////////////
-
-void PdfOutlines::DumpInfo(PdfDocument* pDoc, int level)
-{
-	PdfOutlines *items = NULL;
-	PdfOutlineItem * iter = NULL;
-	for (iter = First(); iter != NULL; iter = iter->Next())
-	{
-		LogInfo("level:%d\n", level);
-		iter->DumpInfo(pDoc);
-		PdfDestination *dest = iter->GetDestination(pDoc);
-		if (dest != NULL) {
-			PdfObject *obj = dest->GetObject();
-			if (obj->IsDictionary()) {
-				
-			}
-		} else {
-			PdfAction* action = iter->GetAction();
-			if (action != NULL) {
-				PdfObject *object = action->GetObject();
-				if (object) {
-					object->GetDictionary().DumpInfo();
-				}
-			}
-		}
-		items = (PdfOutlines*)iter;
-		items->DumpInfo(pDoc, level + 1);
-	}
-}
 
 PdfOutlines::PdfOutlines( PdfVecObjects* pParent )
     : PdfOutlineItem( pParent )

@@ -79,9 +79,6 @@ class PODOFO_DOC_API PdfDocument {
     friend class PdfElement;
 
  public:
-	 void DumpObject(PdfPage *pNo, int objNum, int genNum);
-	 void DumpCataLog(int pNo);
-	 void DumpInfo();
     /** Close down/destruct the PdfDocument
      */
     virtual ~PdfDocument();

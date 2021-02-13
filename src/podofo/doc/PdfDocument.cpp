@@ -96,40 +96,6 @@ PdfDocument::PdfDocument(bool bEmpty)
     }
 }
 
-void PdfDocument::DumpObject(PdfPage *pPage, int objNum, int genNum)
-{
-	PdfReference ref(objNum, genNum);
-	PdfObject *obj = m_vecObjects.GetObject(ref);
-	if (obj) {
-		obj->DumpInfo();
-	}
-}
-
-void PdfDocument::DumpCataLog(int pNo)
-{
-	LogInfo("pageCount:%d\n", GetPageCount());
-	PdfPage *cataLog = GetPage(pNo);
-	if (cataLog != NULL) {
-		cataLog->DumpInfo(this);
-	}
-}
-
-void PdfDocument::DumpInfo()
-{
-	LogInfo("\n");
-	if (GetPageCount() > 14) {
-		DumpCataLog(1);
-	}
-	// m_vecObjects.DumpInfo();
-
-	if (GetOutlines()) {
-		m_pOutlines->DumpInfo(this, 1); 
-	}
-	if (GetNamesTree()) {
-		m_pNamesTree->DumpInfo();
-	}
-}
-
 PdfDocument::~PdfDocument()
 {
     this->Clear();
@@ -336,7 +302,7 @@ const PdfDocument & PdfDocument::Append( const PdfMemDocument & rDoc, bool bAppe
         m_vecObjects.push_back( pObj );
 
         if( (*it)->IsDictionary() && (*it)->HasStream() )
-            *(pObj->GetStream()) = *((*it)->GetStream());
+            *(pObj->GetStream()) = *(static_cast<const PdfObject*>(*it)->GetStream());
 
         PdfError::LogMessage( eLogSeverity_Information,
                               "Fixing references in %i %i R by %i\n", pObj->Reference().ObjectNumber(), pObj->Reference().GenerationNumber(), difference );
@@ -359,7 +325,13 @@ const PdfDocument & PdfDocument::Append( const PdfMemDocument & rDoc, bool bAppe
         for(int i=0;i<rDoc.GetPageCount();i++ )
         {
             PdfPage*      pPage = rDoc.GetPage( i );
-            PdfObject*    pObj  = m_vecObjects.GetObject( PdfReference( pPage->GetObject()->Reference().ObjectNumber() + difference, pPage->GetObject()->Reference().GenerationNumber() ) );
+            if (NULL == pPage)
+            {
+                std::ostringstream oss;
+                oss << "No page " << i << " (the first is 0) found.";
+                PODOFO_RAISE_ERROR_INFO( ePdfError_PageNotFound, oss.str() );
+            }
+            PdfObject*    pObj  = m_vecObjects.MustGetObject( PdfReference( pPage->GetObject()->Reference().ObjectNumber() + difference, pPage->GetObject()->Reference().GenerationNumber() ) );
             if( pObj->IsDictionary() && pObj->GetDictionary().HasKey( "Parent" ) )
                 pObj->GetDictionary().RemoveKey( "Parent" );
 
@@ -391,7 +363,7 @@ const PdfDocument & PdfDocument::Append( const PdfMemDocument & rDoc, bool bAppe
                 pRoot = pRoot->Next();
             
             PdfReference ref( pAppendRoot->First()->GetObject()->Reference().ObjectNumber() + difference, pAppendRoot->First()->GetObject()->Reference().GenerationNumber() );
-            pRoot->InsertChild( new PdfOutlines( m_vecObjects.GetObject( ref ) ) );
+            pRoot->InsertChild( new PdfOutlines( m_vecObjects.MustGetObject( ref ) ) );
         }
     }
     
@@ -429,7 +401,7 @@ const PdfDocument &PdfDocument::InsertExistingPageAt( const PdfMemDocument & rDo
         m_vecObjects.push_back( pObj );
 
         if( (*it)->IsDictionary() && (*it)->HasStream() )
-            *(pObj->GetStream()) = *((*it)->GetStream());
+            *(pObj->GetStream()) = *(static_cast<const PdfObject*>(*it)->GetStream());
 
         PdfError::LogMessage( eLogSeverity_Information,
                               "Fixing references in %i %i R by %i\n", pObj->Reference().ObjectNumber(), pObj->Reference().GenerationNumber(), difference );
@@ -454,7 +426,7 @@ const PdfDocument &PdfDocument::InsertExistingPageAt( const PdfMemDocument & rDo
         }
 
         PdfPage*      pPage = rDoc.GetPage( i );
-        PdfObject*    pObj  = m_vecObjects.GetObject( PdfReference( pPage->GetObject()->Reference().ObjectNumber() + difference, pPage->GetObject()->Reference().GenerationNumber() ) );
+        PdfObject*    pObj  = m_vecObjects.MustGetObject( PdfReference( pPage->GetObject()->Reference().ObjectNumber() + difference, pPage->GetObject()->Reference().GenerationNumber() ) );
         if( pObj->IsDictionary() && pObj->GetDictionary().HasKey( "Parent" ) )
             pObj->GetDictionary().RemoveKey( "Parent" );
 
@@ -486,7 +458,7 @@ const PdfDocument &PdfDocument::InsertExistingPageAt( const PdfMemDocument & rDo
 	    pRoot = pRoot->Next();
     
         PdfReference ref( pAppendRoot->First()->GetObject()->Reference().ObjectNumber() + difference, pAppendRoot->First()->GetObject()->Reference().GenerationNumber() );
-        pRoot->InsertChild( new PdfOutlines( m_vecObjects.GetObject( ref ) ) );
+        pRoot->InsertChild( new PdfOutlines( m_vecObjects.MustGetObject( ref ) ) );
     }
     
     // TODO: merge name trees
@@ -514,7 +486,7 @@ PdfRect PdfDocument::FillXObjectFromPage( PdfXObject * pXObj, const PdfPage * pP
 {
     // TODO: remove unused objects: page, ...
 
-    PdfObject*    pObj  = m_vecObjects.GetObject( PdfReference( pPage->GetObject()->Reference().ObjectNumber() + difference, pPage->GetObject()->Reference().GenerationNumber() ) );
+    PdfObject*    pObj  = m_vecObjects.MustGetObject( PdfReference( pPage->GetObject()->Reference().ObjectNumber() + difference, pPage->GetObject()->Reference().GenerationNumber() ) );
     PdfRect       box  = pPage->GetMediaBox();
 
     // intersect with crop-box
@@ -532,11 +504,7 @@ PdfRect PdfDocument::FillXObjectFromPage( PdfXObject * pXObj, const PdfPage * pP
     if( pObj->IsDictionary() && pObj->GetDictionary().HasKey( "Contents" ) )
     {
         // get direct pointer to contents
-        PdfObject* pContents;
-        if( pObj->GetDictionary().GetKey( "Contents" )->IsReference() )
-            pContents = m_vecObjects.GetObject( pObj->GetDictionary().GetKey( "Contents" )->GetReference() );
-        else
-            pContents = pObj->GetDictionary().GetKey( "Contents" );
+        const PdfObject* pContents = pObj->MustGetIndirectKey( "Contents" );
 
         if( pContents->IsArray() )
         {
@@ -556,7 +524,7 @@ PdfRect PdfDocument::FillXObjectFromPage( PdfXObject * pXObj, const PdfPage * pP
                 if ( it->IsReference() )
                 {
                     // TODO: not very efficient !!
-                    PdfObject*  pObj = GetObjects()->GetObject( it->GetReference() );
+                    const PdfObject*  pObj = GetObjects()->GetObject( it->GetReference() );
 
                     while (pObj!=NULL)
                     {
@@ -566,7 +534,7 @@ PdfRect PdfDocument::FillXObjectFromPage( PdfXObject * pXObj, const PdfPage * pP
                         }
                         else if (pObj->HasStream())
                         {
-                            PdfStream*  pcontStream = pObj->GetStream();
+                            const PdfStream*  pcontStream = pObj->GetStream();
 
                             char*       pcontStreamBuffer;
                             pdf_long    pcontStreamLength;
@@ -598,7 +566,7 @@ PdfRect PdfDocument::FillXObjectFromPage( PdfXObject * pXObj, const PdfPage * pP
             // copy stream to xobject
             PdfObject*  pObj = pXObj->GetContentsForAppending();
             PdfStream*  pObjStream = pObj->GetStream();
-            PdfStream*  pcontStream = pContents->GetStream();
+            const PdfStream*  pcontStream = pContents->GetStream();
             char*       pcontStreamBuffer;
             pdf_long    pcontStreamLength;
 
@@ -742,7 +710,7 @@ void PdfDocument::SetUseFullScreen( void )
     
     // if current mode is anything but "don't care", we need to move that to non-full-screen
     if ( curMode != ePdfPageModeDontCare )
-        SetViewerPreference( PdfName( "NonFullScreenPageMode" ), PdfObject( *(GetCatalog()->GetIndirectKey( PdfName( "PageMode" ) )) ) );
+        SetViewerPreference( PdfName( "NonFullScreenPageMode" ), PdfObject( *(GetCatalog()->MustGetIndirectKey( PdfName( "PageMode" ) )) ) );
     
     SetPageMode( ePdfPageModeFullScreen );
 }
