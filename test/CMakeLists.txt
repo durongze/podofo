@@ -1,13 +1,13 @@
 SUBDIRS(
 	ContentParser
-	CreationTest
+	# CreationTest
 	FilterTest
-	FormTest
+	# FormTest
 	LargeTest
-	ObjectParserTest
+	# ObjectParserTest
 	ParserTest
-	SignatureTest
-	TokenizerTest
+	# SignatureTest
+	# TokenizerTest
 	VariantTest
 	WatermarkTest
 	unit

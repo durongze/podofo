@@ -201,25 +201,41 @@ void HelloWorld( const char* pszFilename )
 
 inline wchar_t* AnsiToUnicode(const char* szStr)
 {
+	wchar_t* pResult = NULL;
+	int nLen = 0;
+#ifdef WIN32
 	int nLen = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, NULL, 0);
 	if (nLen == 0)
 	{
 		return NULL;
 	}
-	wchar_t* pResult = new wchar_t[nLen];
+	pResult = new wchar_t[nLen];
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, pResult, nLen);
+#else
+    nLen = strlen(szStr);
+	pResult = new wchar_t[nLen];
+	mbstowcs(pResult, szStr, nLen);
+#endif
 	return pResult;
 }
 
 inline char* UnicodeToAnsi(const wchar_t* szStr)
 {
-	int nLen = WideCharToMultiByte(CP_ACP, 0, szStr, -1, NULL, 0, NULL, NULL);
+	int nLen = 0;
+	char* pResult = NULL;
+#ifdef WIN32
+	nLen = WideCharToMultiByte(CP_ACP, 0, szStr, -1, NULL, 0, NULL, NULL);
 	if (nLen == 0)
 	{
 		return NULL;
 	}
-	char* pResult = new char[nLen];
+	pResult = new char[nLen];
 	WideCharToMultiByte(CP_ACP, 0, szStr, -1, pResult, nLen, NULL, NULL);
+#else
+    nLen = wcslen(szStr);
+	pResult = new char[nLen];
+	wcstombs(pResult, szStr, nLen);
+#endif
 	return pResult;
 }
 
@@ -828,7 +844,9 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 
 int XmlMain(std::string fname, int pageoffset)
 {
+#ifdef WIN32
 	SetConsoleOutputCP(CP_WINUNICODE);
+#endif
 	int idx = 0;
 	int type = 0;
 	std::string pageno = "1";
@@ -860,11 +878,12 @@ int XmlMain(std::string fname, int pageoffset)
 
 int main( int argc, char* argv[] )
 {
-	std::string fileName = "min_jie";
+	std::string fileName = "kuang_jia_jie_mi";
     std::string genXmlCmd = "copy bak.xml ";
     genXmlCmd += fileName + ".xml";
+	system("ls");
     system(genXmlCmd.c_str());
-    XmlMain(fileName, 23-1);
+    XmlMain(fileName, 9-1);
 	// SetConsoleOutputCP(CP_UTF8);
 	// SetConsoleOutputCP(CP_ACP);
 	PdfMemDocument doc((fileName + ".pdf").c_str());
