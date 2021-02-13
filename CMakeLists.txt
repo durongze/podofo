@@ -486,13 +486,13 @@ INCLUDE_DIRECTORIES(BEFORE # before toolchain include dir (to ignore installed)
     )
 
 INCLUDE_DIRECTORIES(
-    ${PoDoFo_SOURCE_DIR}/src
+    ${PoDoFo_SOURCE_DIR}/src/podofo
     ${FREETYPE_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIR}
     ${EXTRA_INCLUDES}
      )
 LINK_DIRECTORIES(
-    ${PoDoFo_BINARY_DIR}/src/
+    ${PoDoFo_BINARY_DIR}/src/podofo
     )
 
 #
@@ -553,7 +553,7 @@ FILE(APPEND
      "SET(PODOFO_INCLUDES ${PoDoFo_SOURCE_DIR}/src)\n"
      )
 
-ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(src/podofo)
 IF(NOT PODOFO_BUILD_LIB_ONLY)
 #ADD_SUBDIRECTORY(test)
 #ADD_SUBDIRECTORY(tools)
