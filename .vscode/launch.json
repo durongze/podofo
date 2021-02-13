@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/home/du/code/pdf/podofo-master/dyz/examples/helloworld/helloworld",
-            "args": [],
+            "args": ["android", "14"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

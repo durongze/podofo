@@ -444,8 +444,8 @@ int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 	TiXmlElement *xmlHtml = xmlBm.FirstChildElement("html");
 	TiXmlElement *xmlBody = xmlHtml->FirstChildElement("body");
 
-	PdfOutlines* bMarks = docFirst.GetOutlines();
-	// bMarks->Erase();
+	PdfOutlines* bMarks = docFirst.GetOutlines(false);
+	bMarks->Erase();
 #if 1
 
 	PdfOutlineItem*	bmRoot = bMarks->CreateRoot(bm);
@@ -875,12 +875,18 @@ int XmlMain(std::string fname, int pageoffset)
 
 int main( int argc, char* argv[] )
 {
-	std::string fileName = "shen_ru_li_jie_android2";
+	if( argc != 3 )
+    {
+        std::cout << argv[0] << " <fileName> <startPage> " << std::endl;
+        return -1;
+    }
+	size_t startPage = atoi(argv[2]);
+	std::string fileName = argv[1];
     std::string genXmlCmd = "cp bak.xml ";
     genXmlCmd += fileName + ".xml";
 	system("ls");
     system(genXmlCmd.c_str());
-    XmlMain(fileName, 9-1);
+    XmlMain(fileName, startPage-1);
 	// SetConsoleOutputCP(CP_UTF8);
 	// SetConsoleOutputCP(CP_ACP);
 	PdfMemDocument doc((fileName + ".pdf").c_str());
@@ -897,11 +903,6 @@ int main( int argc, char* argv[] )
      * a help message is displayed and the example application
      * will quit.
      */
-    if( argc != 2 )
-    {
-        PrintHelp();
-        return -1;
-    }
 
     /*
      * All podofo functions will throw an exception in case of an error.
