@@ -12,7 +12,7 @@ PROJECT(PoDoFo)
 
 SET(PODOFO_VERSION_MAJOR "0" CACHE STRING "Major part of PoDoFo version number")
 SET(PODOFO_VERSION_MINOR "9" CACHE STRING "Minor part of PoDoFo version number")
-SET(PODOFO_VERSION_PATCH "6" CACHE STRING "Patchlevel part of PoDoFo version number")
+SET(PODOFO_VERSION_PATCH "7" CACHE STRING "Patchlevel part of PoDoFo version number")
 SET(PODOFO_SOVERSION "${PODOFO_VERSION_MAJOR}.${PODOFO_VERSION_MINOR}.${PODOFO_VERSION_PATCH}")
 SET(PODOFO_LIBVERSION "${PODOFO_SOVERSION}")
 
@@ -20,6 +20,7 @@ SET(PODOFO_LIBVERSION "${PODOFO_SOVERSION}")
 #
 # Main includes
 #
+INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(CheckIncludeFile)
 INCLUDE(CheckLibraryExists)
 INCLUDE(TestBigEndian)
@@ -44,7 +45,7 @@ SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 # If users try to use something else the results can be confusing. We set a
 # variable here that we require to be set elsewhere, otherwise we'll complain.
 SET(PODOFO_MAIN_CMAKELISTS_READ TRUE)
-SET(PODOFO_BUILD_STATIC TRUE)
+# SET(PODOFO_BUILD_STATIC TRUE)
 # If the user hasn't told use specifically what they want, build only
 # a static library or only a shared library on Windows.
 IF(NOT DEFINED PODOFO_BUILD_SHARED AND NOT DEFINED PODOFO_BUILD_STATIC)
@@ -91,6 +92,14 @@ ENDIF(WANT_LIB64)
 
 ENDIF(DEFINED LIB_SUFFIX)
 MESSAGE("Will install libraries to ${CMAKE_INSTALL_PREFIX}/${LIBDIRNAME}")
+
+CHECK_CXX_SOURCE_COMPILES("#include <memory>
+			class Cls {
+			public:
+			Cls() {}
+			~Cls() {}
+			};
+			int main(void) { std::unique_ptr<Cls> cls; return 0; }" PODOFO_HAVE_UNIQUE_PTR)
 
 # Some headers that tend to vary a bit
 CHECK_INCLUDE_FILE("strings.h" PODOFO_HAVE_STRINGS_H) 
@@ -290,7 +299,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Woverloaded-virtual -Wswitch-enum -Wcast-qual -Wwrite-strings -Wredundant-decls -Wreorder -Wno-deprecated-declarations")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Woverloaded-virtual -Wswitch -Wcast-qual -Wwrite-strings -Wredundant-decls -Wreorder -Wno-deprecated-declarations")
 
     #
     # Note that we do not need debug definitions here. Set
@@ -472,7 +481,7 @@ IF(WANT_BOOST)
 ENDIF(WANT_BOOST)
 
 INCLUDE_DIRECTORIES(BEFORE # before toolchain include dir (to ignore installed)
-    ${PoDoFo_SOURCE_DIR}   # order will be reversed, so this is the second dir
+    ${PoDoFo_SOURCE_DIR}/src   # order will be reversed, so this is the second dir
     ${PoDoFo_BINARY_DIR}   # because of BEFORE, this is the first include dir
     )
 
@@ -546,10 +555,10 @@ FILE(APPEND
 
 ADD_SUBDIRECTORY(src)
 IF(NOT PODOFO_BUILD_LIB_ONLY)
-ADD_SUBDIRECTORY(test)
-ADD_SUBDIRECTORY(tools)
-ADD_SUBDIRECTORY(examples)
-ADD_SUBDIRECTORY(man)
+#ADD_SUBDIRECTORY(test)
+#ADD_SUBDIRECTORY(tools)
+#ADD_SUBDIRECTORY(examples)
+#ADD_SUBDIRECTORY(man)
 ENDIF(NOT PODOFO_BUILD_LIB_ONLY)
 
 # Generate our configure file
