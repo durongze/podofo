@@ -201,25 +201,43 @@ void HelloWorld( const char* pszFilename )
 
 inline wchar_t* AnsiToUnicode(const char* szStr)
 {
+	wchar_t* pResult = NULL;
+	int nLen = 0;
+#ifdef WIN32
 	int nLen = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, NULL, 0);
 	if (nLen == 0)
 	{
 		return NULL;
 	}
-	wchar_t* pResult = new wchar_t[nLen];
+	pResult = new wchar_t[nLen];
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, pResult, nLen);
+#else
+    nLen = strlen(szStr) + 1;
+	pResult = new wchar_t[nLen];
+	setlocale(LC_ALL, "en_GB.UTF8");
+	mbstowcs(pResult, szStr, nLen + 1);
+#endif
 	return pResult;
 }
 
 inline char* UnicodeToAnsi(const wchar_t* szStr)
 {
-	int nLen = WideCharToMultiByte(CP_ACP, 0, szStr, -1, NULL, 0, NULL, NULL);
+	int nLen = 0;
+	char* pResult = NULL;
+#ifdef WIN32
+	nLen = WideCharToMultiByte(CP_ACP, 0, szStr, -1, NULL, 0, NULL, NULL);
 	if (nLen == 0)
 	{
 		return NULL;
 	}
-	char* pResult = new char[nLen];
+	pResult = new char[nLen];
 	WideCharToMultiByte(CP_ACP, 0, szStr, -1, pResult, nLen, NULL, NULL);
+#else
+	setlocale(LC_ALL, "en_GB.UTF8");
+    nLen = wcslen(szStr) + 1;
+	pResult = new char[nLen];
+	wcstombs(pResult, szStr, nLen);
+#endif
 	return pResult;
 }
 
@@ -413,7 +431,6 @@ int AddBookMarkBy(PdfMemDocument &doc, PdfOutlineItem*& bmRoot,
 		xmlItemA = xmlItem->FirstChildElement();
 		itemHref = xmlItemA->Attribute("href");
 		itemText = xmlItemA->GetText();
-		LogInfo("Text:%s\n", itemText);
 	}
 	return 0;
 }
@@ -463,7 +480,6 @@ int SaveBookMark(std::string fileName)
 int AddBookMark(PdfMemDocument &docFirst, const char* bm)
 {
 	const char *xmlBookHref = NULL;
-	docFirst.DumpInfo();
 	TiXmlDocument xmlBm;
 	
 	xmlBm.LoadFile(bm);
@@ -480,7 +496,6 @@ int AddBookMark(PdfMemDocument &docFirst, const char* bm)
 	for (xmlRoot = xmlBody->FirstChildElement(); 
 		xmlRoot != NULL && xmlRoot->FirstChildElement() == NULL;
 		xmlRoot = xmlRoot->NextSiblingElement()) {
-		LogInfo("%s\n", xmlRoot->GetText());
 	}
 	
 	AddBookMarkBy(docFirst, bmRoot, xmlRoot);
@@ -500,8 +515,6 @@ int MergeDoc(const char *firstFile, const char *secondFile, const char *doc, con
 {
 	PdfMemDocument docFirst(firstFile);
 	PdfMemDocument docSecond(secondFile);
-
-	docFirst.DumpInfo();
 
 	docFirst.Append(docSecond);
 
@@ -712,7 +725,7 @@ public:
 	{
 		// m_chapter.push_back("Lesson");
 		// m_chapter.push_back(__TEXT("Chapter"));
-        m_chapter.push_back(__TEXT("��*��"));
+        m_chapter.push_back(__TEXT("第*章"));
 
 		m_section.push_back("1.1.1");
 
@@ -852,7 +865,7 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 		return 0;
 	}
 	/*<?xml version="1.0" standalone="yes"?>,
-	声明对象具有三个属性值，版本，编码和独立文件声明 */
+	*/
 	TiXmlNode * node = doc.FirstChild();
 	if (NULL != node) {
 		TiXmlDeclaration *decl = node->ToDeclaration();
@@ -882,7 +895,9 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 
 int XmlMain(std::string fname, int pageoffset)
 {
+#ifdef WIN32
 	SetConsoleOutputCP(CP_WINUNICODE);
+#endif
 	int idx = 0;
 	int type = 0;
 	std::string pageno = "1";
@@ -912,11 +927,163 @@ int XmlMain(std::string fname, int pageoffset)
 	return 0;
 }
 
+#include <iostream>
+#include <iomanip>
+typedef unsigned int byte;
+
+class BitMapPixUnit
+{
+	public:
+		BitMapPixUnit(byte *addr, size_t size, size_t step = 3)
+			:m_addr(addr), m_size(size), m_step(step)
+		{
+			m_step = m_step ? m_step : 3;
+		}
+
+		~BitMapPixUnit(){
+		}
+
+		byte& operator[](size_t idx)
+		{
+			return m_addr[idx * m_step];
+		}
+
+		int Init(byte base)
+		{
+			size_t i;
+			size_t step = m_step ? m_step : 1;
+			for (i = 0; i < m_size; i += 1){
+				m_addr[i * step] = base + i;
+			}
+			return 0;
+		}
+		void Dump(std::ostream &out, size_t lnsz){
+			size_t i;
+			size_t step = m_step ? m_step : 1;
+			for (i = 0; i < m_size; i += 1){
+				if (i % lnsz == 0) {
+					out << std::endl;		
+				}
+				out << std::setiosflags(std::ios::uppercase) << std::hex << std::setfill('0') << std::setw(8) <<  m_addr[i * step];
+				out << " ";
+			}
+			out << std::endl;
+		}
+
+	private:
+		byte *m_addr;
+		size_t m_size;
+		size_t m_step;
+};
+
+class IBitMapPix
+{
+	public:
+		IBitMapPix(byte *addr, size_t size){}		
+		virtual ~IBitMapPix(){}
+		virtual int Init() = 0;
+		virtual void Dump(std::ostream &out, size_t lnsz) = 0;
+	protected:
+		byte *m_addr;
+		size_t m_size;
+};
+
+class RgbBitMapPix:public IBitMapPix
+{
+	public:
+		RgbBitMapPix(byte *addr, size_t size)
+		:IBitMapPix(addr, size),
+		m_r(addr, size, 3),m_g(addr + 1, size, 3),m_b(addr + 2, size, 3){}	
+		virtual ~RgbBitMapPix(){}
+		virtual int Init(){
+			m_r.Init(0xFF00);
+			m_g.Init(0xEE00);
+			m_b.Init(0xDD00);
+			return 0;
+		}
+
+		void Dump(std::ostream &out, size_t lnsz) {
+			m_r.Dump(out, lnsz);
+			m_g.Dump(out, lnsz);
+			m_b.Dump(out, lnsz);
+		}
+
+	private:
+		BitMapPixUnit m_r;
+		BitMapPixUnit m_g;
+		BitMapPixUnit m_b;
+};
+
+class YuvBitMapPix:public IBitMapPix
+{
+	public:
+		YuvBitMapPix(byte *addr, size_t size)
+		:IBitMapPix(addr, size),
+		m_y(addr, size, 1),m_u(addr + size, size, 2),m_v(addr + size + 1, size, 2){}	
+		virtual ~YuvBitMapPix(){}
+		virtual int Init(){
+			m_y.Init(0xAA00);
+			m_u.Init(0xBB00);
+			m_v.Init(0xCC00);
+			return 0;
+		}
+
+		void Dump(std::ostream &out, size_t lnsz) {
+			m_y.Dump(out, lnsz);
+			m_u.Dump(out, lnsz);
+			m_v.Dump(out, lnsz);
+		}
+
+	private:
+		BitMapPixUnit m_y;
+		BitMapPixUnit m_u;
+		BitMapPixUnit m_v;
+};
+
+class BitMap
+{
+	public:
+		BitMap(size_t width, size_t height, size_t step)
+		:m_width(width), m_height(height), m_step(step)
+		{
+			m_addr = new byte[width * height * step];
+			m_pix = new YuvBitMapPix(m_addr, (width * height));
+		}
+		~BitMap(){
+			delete m_pix;
+			delete[] m_addr;
+		}
+		int Init()
+		{
+			m_pix->Init();
+			return 0;
+		}
+		void Dump(std::ostream &out){
+			m_pix->Dump(out, m_width);
+		}
+		
+	private:
+		IBitMapPix *m_pix;
+		size_t m_width;
+		size_t m_height;
+		byte *m_addr;
+		size_t m_step;
+};
+
+int PicMain( int argc, char* argv[] )
+{
+	BitMap bm(8, 8, 3);
+	bm.Init();
+	bm.Dump(std::cout);
+	return 0;
+}
+
 int main( int argc, char* argv[] )
 {
 	std::string fileName = "ying_yong_kuang_jia_de_she_ji";
     std::string genXmlCmd = "copy bak.xml ";
     genXmlCmd += fileName + ".xml";
+	system("ls");
     system(genXmlCmd.c_str());
     XmlMain(fileName, 13-1);
 	// SetConsoleOutputCP(CP_UTF8);
@@ -934,11 +1101,6 @@ int main( int argc, char* argv[] )
      * a help message is displayed and the example application
      * will quit.
      */
-    if( argc != 2 )
-    {
-        PrintHelp();
-        return -1;
-    }
 
     /*
      * All podofo functions will throw an exception in case of an error.
