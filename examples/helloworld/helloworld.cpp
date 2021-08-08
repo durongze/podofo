@@ -418,7 +418,49 @@ int AddBookMarkBy(PdfMemDocument &doc, PdfOutlineItem*& bmRoot,
 	return 0;
 }
 
-int AddBookMark(PdfMemDocument &docFirst, const char *bm)
+int DelBookMark(std::string fileName)
+{
+    PdfMemDocument docFirst((fileName + ".pdf").c_str());
+    const char* xmlBookHref = NULL;
+    docFirst.DumpInfo();
+
+    docFirst.DelOutlines();
+
+    docFirst.Write((fileName + "_bm.pdf").c_str());
+    return 0;
+}
+
+int ExportBookMark(std::fstream &bookMarkTxt, PdfOutlineItem* item)
+{
+    if (item == NULL) {
+        return 0;
+    }
+
+    for (PdfOutlineItem* itemSub = item->First(); itemSub != NULL; itemSub = itemSub->Next()) {
+        bookMarkTxt << itemSub->GetTitle().GetStringUtf8() << std::endl;
+        ExportBookMark(bookMarkTxt, itemSub);
+    }
+    return 0;
+}
+
+int SaveBookMark(std::string fileName)
+{
+    PdfMemDocument docFirst((fileName + ".pdf").c_str());
+    const char* xmlBookHref = NULL;
+    docFirst.DumpInfo();
+
+    PdfOutlines* bMarks = docFirst.GetOutlines();
+    if (bMarks == NULL) {
+        return -1;
+    }
+
+    std::fstream bookMarkTxt(fileName + ".txt", std::ios::out | std::ios::trunc);
+    ExportBookMark(bookMarkTxt, bMarks);
+
+    return 0;
+}
+
+int AddBookMark(PdfMemDocument &docFirst, const char* bm)
 {
 	const char *xmlBookHref = NULL;
 	docFirst.DumpInfo();
@@ -429,9 +471,9 @@ int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 	TiXmlElement *xmlBody = xmlHtml->FirstChildElement("body");
 
 	PdfOutlines* bMarks = docFirst.GetOutlines();
-	// bMarks->Erase();
-#if 1
-
+    if (bMarks == NULL) {
+        return -1;
+    }
 	PdfOutlineItem*	bmRoot = bMarks->CreateRoot(bm);
 
 	TiXmlElement *xmlRoot = NULL;
@@ -442,8 +484,16 @@ int AddBookMark(PdfMemDocument &docFirst, const char *bm)
 	}
 	
 	AddBookMarkBy(docFirst, bmRoot, xmlRoot);
-#endif
+
 	return 0;
+}
+
+int AddBookMark(std::string fileName)
+{
+    PdfMemDocument docFirst((fileName + "_bm.pdf").c_str());
+    AddBookMark(docFirst, (fileName + ".xml").c_str());
+    docFirst.Write((fileName + ".pdf").c_str());
+    return 0;
 }
 
 int MergeDoc(const char *firstFile, const char *secondFile, const char *doc, const char *bm)
@@ -661,10 +711,11 @@ public:
 	XmlCfg()
 	{
 		// m_chapter.push_back("Lesson");
-		m_chapter.push_back("ç¬¬*ç« èŠ‚");
-		// m_section.push_back("ç¬¬*èŠ‚");
+		// m_chapter.push_back(__TEXT("Chapter"));
+        m_chapter.push_back(__TEXT("µÚ*ÕÂ"));
+
 		m_section.push_back("1.1.1");
-		// m_lesson.push_back("ç¬¬*ç¯‡");
+
 		m_lesson.push_back("1.1.1");
 		// m_lesson.push_back("[0-9].[0-9]");
 	}
@@ -749,9 +800,12 @@ private:
 
 XmlCfg cfg;
 
-int ParseLine(const std::string& line, std::vector<std::string>& allCol)
+int ParseLine(const std::string& lineSrc, std::vector<std::string>& allCol)
 {
-	char oper = ' ';
+    char oper = ' ';
+    std::string line = lineSrc;
+    line.erase(lineSrc.find_last_not_of(oper) + 1, lineSrc.length());
+
 	for (int idxCol = 0; idxCol < line.length(); ++idxCol)
 	{
 		int idxTab = line.find(oper, idxCol);
@@ -860,17 +914,16 @@ int XmlMain(std::string fname, int pageoffset)
 
 int main( int argc, char* argv[] )
 {
-	std::string fileName = "min_jie";
+	std::string fileName = "ying_yong_kuang_jia_de_she_ji";
     std::string genXmlCmd = "copy bak.xml ";
     genXmlCmd += fileName + ".xml";
     system(genXmlCmd.c_str());
-    XmlMain(fileName, 23-1);
+    XmlMain(fileName, 13-1);
 	// SetConsoleOutputCP(CP_UTF8);
 	// SetConsoleOutputCP(CP_ACP);
-	PdfMemDocument doc((fileName + ".pdf").c_str());
-	doc.DumpInfo();
-	AddBookMark(doc, (fileName + ".xml").c_str());
-	doc.Write((fileName + "_bm.pdf").c_str());
+    // SaveBookMark(fileName);
+    DelBookMark(fileName);
+	AddBookMark(fileName);
 
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");

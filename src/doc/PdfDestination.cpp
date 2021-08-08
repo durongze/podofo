@@ -168,7 +168,10 @@ void PdfDestination::Init( PdfObject* pObject, PdfDocument* pDocument )
 {
     bool bValueExpected = false;
     PdfObject* pValue = NULL;
-
+	if (pObject == NULL) 
+	{
+		return;
+	}
     if ( pObject->GetDataType() == ePdfDataType_Array ) 
     {
         m_array = pObject->GetArray();

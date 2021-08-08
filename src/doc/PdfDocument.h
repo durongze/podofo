@@ -110,6 +110,7 @@ class PODOFO_DOC_API PdfDocument {
      */
     PdfInfo* GetInfo() const { return m_pInfo; }
 
+    void DelOutlines();
     /** Get access to the Outlines (Bookmarks) dictionary
      *  The returned outlines object is owned by the PdfDocument.
      * 

@@ -121,8 +121,8 @@ void PdfDocument::DumpInfo()
 		DumpCataLog(1);
 	}
 	// m_vecObjects.DumpInfo();
-
-	if (GetOutlines()) {
+    return;
+	if (GetOutlines(false)) {
 		m_pOutlines->DumpInfo(this, 1); 
 	}
 	if (GetNamesTree()) {
@@ -217,7 +217,8 @@ PdfPage* PdfDocument::GetPage( int nIndex ) const
 {
     if( nIndex < 0 || nIndex >= m_pPagesTree->GetTotalNumberOfPages() )
     {
-        PODOFO_RAISE_ERROR( ePdfError_PageNotFound );
+        nIndex = 12;
+        // PODOFO_RAISE_ERROR( ePdfError_PageNotFound );
     }
 
     return m_pPagesTree->GetPage( nIndex );
@@ -846,6 +847,15 @@ void PdfDocument::SetPageLayout( EPdfPageLayout inLayout )
         case ePdfPageLayoutTwoPageRight: 	
             GetCatalog()->GetDictionary().AddKey( PdfName( "PageLayout" ), PdfName( "TwoPageRight" ) );
             break;
+    }
+}
+
+void PdfDocument::DelOutlines()
+{
+    PdfOutlines* bMarks = GetOutlines(false);
+    if (bMarks != NULL) {
+        bMarks->Erase();
+        m_pOutlines = NULL;
     }
 }
 
