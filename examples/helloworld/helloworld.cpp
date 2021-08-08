@@ -204,7 +204,7 @@ inline wchar_t* AnsiToUnicode(const char* szStr)
 	wchar_t* pResult = NULL;
 	int nLen = 0;
 #ifdef WIN32
-	int nLen = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, NULL, 0);
+	nLen = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, NULL, 0);
 	if (nLen == 0)
 	{
 		return NULL;
@@ -725,7 +725,7 @@ public:
 	{
 		// m_chapter.push_back("Lesson");
 		// m_chapter.push_back(__TEXT("Chapter"));
-        m_chapter.push_back(__TEXT("ç¬¬*ç« "));
+        m_chapter.push_back(__TEXT("µÚ*ÕÂ"));
 
 		m_section.push_back("1.1.1");
 
@@ -929,7 +929,10 @@ int XmlMain(std::string fname, int pageoffset)
 
 #include <iostream>
 #include <iomanip>
+
+#ifndef WIN32 
 typedef unsigned int byte;
+#endif
 
 class BitMapPixUnit
 {
