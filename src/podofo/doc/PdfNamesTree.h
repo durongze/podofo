@@ -66,7 +66,7 @@ class PODOFO_DOC_API PdfNamesTree : public PdfElement {
     PdfNamesTree( PdfObject* pObject, PdfObject* pCatalog );
 
     virtual ~PdfNamesTree() { }
-
+    void DumpInfo(){}
     /** Insert a key and value in one of the dictionaries of the name tree.
      *  \param tree name of the tree to search for the key.
      *  \param key the key to insert. If it exists, it will be overwritten.

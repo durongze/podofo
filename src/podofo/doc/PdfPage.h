@@ -88,7 +88,7 @@ class PODOFO_DOC_API PdfPage : public PdfElement, public PdfCanvas {
     PdfPage( PdfObject* pObject, const std::deque<PdfObject*> & listOfParents );
 
     virtual ~PdfPage();
-
+    void DumpInfo(){}
     /** Get the current page size in PDF Units
      *  \returns a PdfRect containing the page size available for drawing
      */

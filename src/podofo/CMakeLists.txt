@@ -269,7 +269,7 @@ IF(PODOFO_BUILD_STATIC)
         SOVERSION "${PODOFO_SOVERSION}"
         CLEAN_DIRECT_OUTPUT 1
         OUTPUT_NAME "podofo"
-        COMPILE_FLAGS "-DBUILDING_PODOFO"
+        COMPILE_FLAGS "-DBUILDING_PODOFO -g"
         )
     SET(PODOFO_DEPEND_TARGET podofo_static
         CACHE INTERNAL "Which PoDoFo library variant to depend on")
@@ -293,7 +293,7 @@ IF(PODOFO_BUILD_SHARED)
         SOVERSION "${PODOFO_SOVERSION}"
         CLEAN_DIRECT_OUTPUT 1
         OUTPUT_NAME "podofo"
-        COMPILE_FLAGS "-DBUILDING_PODOFO"
+        COMPILE_FLAGS "-DBUILDING_PODOFO -g"
         )
     # Since we're building a shared podofo, prefer to depend on this one for
     # tests and tools over the static library (if built).

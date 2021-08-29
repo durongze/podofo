@@ -331,7 +331,7 @@ class PODOFO_DOC_API PdfOutlines : public PdfOutlineItem {
      *  \param pObject an existing outlines dictionary
      */
     PdfOutlines( PdfObject* pObject );
-
+    void DumpInfo(){}
     virtual ~PdfOutlines() { }
 
     /** Create the root node of the 

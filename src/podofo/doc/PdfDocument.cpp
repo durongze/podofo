@@ -107,23 +107,22 @@ void PdfDocument::DumpObject(PdfPage *pPage, int objNum, int genNum)
 
 void PdfDocument::DumpCataLog(int pNo)
 {
-	LogInfo("pageCount:%d\n", GetPageCount());
+	GetPageCount();
 	PdfPage *cataLog = GetPage(pNo);
 	if (cataLog != NULL) {
-		cataLog->DumpInfo(this);
+		cataLog->DumpInfo();
 	}
 }
 
 void PdfDocument::DumpInfo()
 {
-	LogInfo("\n");
 	if (GetPageCount() > 14) {
 		DumpCataLog(1);
 	}
 	// m_vecObjects.DumpInfo();
     return;
 	if (GetOutlines(false)) {
-		m_pOutlines->DumpInfo(this, 1); 
+		m_pOutlines->DumpInfo(); 
 	}
 	if (GetNamesTree()) {
 		m_pNamesTree->DumpInfo();

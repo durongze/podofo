@@ -725,8 +725,11 @@ public:
 	{
 		// m_chapter.push_back("Lesson");
 		// m_chapter.push_back(__TEXT("Chapter"));
-        m_chapter.push_back(__TEXT("µÚ*ÕÂ"));
-
+#ifdef _WIN32
+        m_chapter.push_back(__TEXT("ç¬¬*ç« "));
+#else
+		m_chapter.push_back(("ç¬¬*ç« "));
+#endif
 		m_section.push_back("1.1.1");
 
 		m_lesson.push_back("1.1.1");
@@ -984,6 +987,7 @@ class IBitMapPix
 	public:
 		IBitMapPix(byte *addr, size_t size){}		
 		virtual ~IBitMapPix(){}
+		virtual byte& Access(size_t idx, size_t offset) = 0;
 		virtual int Init() = 0;
 		virtual void Dump(std::ostream &out, size_t lnsz) = 0;
 	protected:
@@ -998,6 +1002,19 @@ class RgbBitMapPix:public IBitMapPix
 		:IBitMapPix(addr, size),
 		m_r(addr, size, 3),m_g(addr + 1, size, 3),m_b(addr + 2, size, 3){}	
 		virtual ~RgbBitMapPix(){}
+		virtual byte& Access(size_t idx, size_t offset){
+			switch (offset)
+			{
+			case 0:
+				return m_r[idx];
+			case 1:
+				return m_g[idx];
+			case 2:
+				return m_b[idx];
+			default:
+				return m_r[idx];
+			} 
+		}
 		virtual int Init(){
 			m_r.Init(0xFF00);
 			m_g.Init(0xEE00);
@@ -1024,6 +1041,19 @@ class YuvBitMapPix:public IBitMapPix
 		:IBitMapPix(addr, size),
 		m_y(addr, size, 1),m_u(addr + size, size, 2),m_v(addr + size + 1, size, 2){}	
 		virtual ~YuvBitMapPix(){}
+		virtual byte& Access(size_t idx, size_t offset){
+			switch (offset)
+			{
+			case 0:
+				return m_y[idx];
+			case 1:
+				return m_u[idx];
+			case 2:
+				return m_v[idx];
+			default:
+				return m_y[idx];
+			} 
+		}
 		virtual int Init(){
 			m_y.Init(0xAA00);
 			m_u.Init(0xBB00);
@@ -1046,11 +1076,15 @@ class YuvBitMapPix:public IBitMapPix
 class BitMap
 {
 	public:
-		BitMap(size_t width, size_t height, size_t step)
-		:m_width(width), m_height(height), m_step(step)
+		BitMap(size_t width, size_t height, int type = 0)
+		:m_width(width), m_height(height)
 		{
-			m_addr = new byte[width * height * step];
-			m_pix = new YuvBitMapPix(m_addr, (width * height));
+			m_addr = new byte[width * height * 3];
+			if (type == 0) {
+				m_pix = new RgbBitMapPix(m_addr, (width * height));
+			} else {
+				m_pix = new YuvBitMapPix(m_addr, (width * height));
+			}
 		}
 		~BitMap(){
 			delete m_pix;
@@ -1075,7 +1109,7 @@ class BitMap
 
 int PicMain( int argc, char* argv[] )
 {
-	BitMap bm(8, 8, 3);
+	BitMap bm(8, 8, 1);
 	bm.Init();
 	bm.Dump(std::cout);
 	return 0;
@@ -1083,12 +1117,19 @@ int PicMain( int argc, char* argv[] )
 
 int main( int argc, char* argv[] )
 {
-	std::string fileName = "ying_yong_kuang_jia_de_she_ji";
-    std::string genXmlCmd = "copy bak.xml ";
+	// return PicMain( argc, argv);
+	if( argc != 3 )
+    {
+        std::cout << argv[0] << " <fileName> <startPage> " << std::endl;
+        return -1;
+    }
+	size_t startPage = atoi(argv[2]);
+	std::string fileName = argv[1];
+    std::string genXmlCmd = "cp bak.xml ";
     genXmlCmd += fileName + ".xml";
 	system("ls");
     system(genXmlCmd.c_str());
-    XmlMain(fileName, 13-1);
+    XmlMain(fileName, startPage-1);
 	// SetConsoleOutputCP(CP_UTF8);
 	// SetConsoleOutputCP(CP_ACP);
     // SaveBookMark(fileName);
