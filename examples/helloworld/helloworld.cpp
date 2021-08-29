@@ -1115,26 +1115,60 @@ int PicMain( int argc, char* argv[] )
 	return 0;
 }
 
-int main( int argc, char* argv[] )
+int CheckFile(std::string fileName)
 {
-	// return PicMain( argc, argv);
-	if( argc != 3 )
-    {
-        std::cout << argv[0] << " <fileName> <startPage> " << std::endl;
-        return -1;
-    }
-	size_t startPage = atoi(argv[2]);
-	std::string fileName = argv[1];
     std::string genXmlCmd = "cp bak.xml ";
     genXmlCmd += fileName + ".xml";
-	system("ls");
     system(genXmlCmd.c_str());
+
+    FILE *fpPdf = fopen((fileName + ".pdf").c_str(), "rb");
+    if (fpPdf != NULL) {
+        return -2;
+    } else {
+        fclose(fpPdf);
+    }
+    FILE *fpTxt = fopen((fileName + ".txt").c_str(), "rb");
+    if (fpTxt != NULL) {
+        return -3;
+    } else {
+        fclose(fpTxt);
+    }
+    FILE *fpXml = fopen((fileName + ".xml").c_str(), "rb");
+    if (fpXml != NULL) {
+        return -4;
+    } else {
+        fclose(fpXml);
+    }
+	return 0;
+}
+
+void Useage(std::string exec)
+{
+    std::cout << exec << " <fileName> <startPage> " << std::endl;
+}
+
+int AddBookMarkMain(int argc, char** argv)
+{
+    if(argc != 3 || CheckFile(argv[1]))
+    {
+        Useage(argv[0]);
+        return -1;
+    }
+    std::string fileName = argv[1];
+    size_t startPage = atoi(argv[2]);
     XmlMain(fileName, startPage-1);
-	// SetConsoleOutputCP(CP_UTF8);
-	// SetConsoleOutputCP(CP_ACP);
+    // SetConsoleOutputCP(CP_UTF8);
+    // SetConsoleOutputCP(CP_ACP);
     // SaveBookMark(fileName);
     DelBookMark(fileName);
-	AddBookMark(fileName);
+    AddBookMark(fileName);
+    return 0;
+}
+
+int main( int argc, char* argv[] )
+{
+    return AddBookMarkMain(argc, argv);
+    // return PicMain( argc, argv);
 
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
