@@ -35,6 +35,9 @@
  */
 #include <podofo/podofo.h>
 #include "tinyxml.h"
+#ifdef __linux
+	#include <unistd.h>
+#endif
 /*
  * All podofo classes are member of the PoDoFo namespace.
  */
@@ -1118,23 +1121,35 @@ int PicMain( int argc, char* argv[] )
 int CheckFile(std::string fileName)
 {
     std::string genXmlCmd = "cp bak.xml ";
-    genXmlCmd += fileName + ".xml";
+	std::string pdfFile = fileName + ".pdf";
+	std::string xmlFile = fileName + ".xml";
+	std::string txtFile = fileName + ".txt";
+	std::string cwdDir;
+#ifdef __linux
+	char cwd_buf[256] = {0};
+	cwdDir += (const char*)getcwd(cwd_buf, sizeof(cwd_buf));
+	cwdDir += ":";
+#endif
+    genXmlCmd += xmlFile;
     system(genXmlCmd.c_str());
 
-    FILE *fpPdf = fopen((fileName + ".pdf").c_str(), "rb");
-    if (fpPdf != NULL) {
+    FILE *fpPdf = fopen(pdfFile.c_str(), "rb");
+    if (fpPdf == NULL) {
+		std::cout << cwdDir << pdfFile << ":" << errno << std::endl;
         return -2;
     } else {
         fclose(fpPdf);
     }
-    FILE *fpTxt = fopen((fileName + ".txt").c_str(), "rb");
-    if (fpTxt != NULL) {
+    FILE *fpTxt = fopen(txtFile.c_str(), "rb");
+    if (fpTxt == NULL) {
+		std::cout << cwdDir << txtFile << ":" << errno << std::endl;
         return -3;
     } else {
         fclose(fpTxt);
     }
-    FILE *fpXml = fopen((fileName + ".xml").c_str(), "rb");
-    if (fpXml != NULL) {
+    FILE *fpXml = fopen(xmlFile.c_str(), "rb");
+    if (fpXml == NULL) {
+		std::cout << cwdDir << xmlFile << ":" << errno << std::endl;
         return -4;
     } else {
         fclose(fpXml);
