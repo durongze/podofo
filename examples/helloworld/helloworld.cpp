@@ -447,15 +447,23 @@ int DelBookMark(std::string fileName)
     return 0;
 }
 
-int ExportBookMark(std::fstream &bookMarkTxt, PdfOutlineItem* item)
+static int pageNo = 0;
+
+int ExportBookMark(std::fstream &bookMarkTxt, PdfOutlineItem* item, PdfDocument* pDoc)
 {
     if (item == NULL) {
         return 0;
     }
 
     for (PdfOutlineItem* itemSub = item->First(); itemSub != NULL; itemSub = itemSub->Next()) {
-        bookMarkTxt << itemSub->GetTitle().GetStringUtf8() << std::endl;
-        ExportBookMark(bookMarkTxt, itemSub);
+        PoDoFo::PdfDestination* pDest = itemSub->GetDestination(pDoc);
+        if (pDest) { 
+            PoDoFo::PdfPage* pPage = pDest->GetPage(pDoc);
+            if (pPage)
+                pageNo = pPage->GetPageNumber();
+        }
+        bookMarkTxt << itemSub->GetTitle().GetStringUtf8() << "        " << pageNo << std::endl;
+        ExportBookMark(bookMarkTxt, itemSub, pDoc);
     }
     return 0;
 }
@@ -471,8 +479,8 @@ int SaveBookMark(std::string fileName)
         return -1;
     }
 
-    std::fstream bookMarkTxt(fileName + ".txt", std::ios::out | std::ios::trunc);
-    ExportBookMark(bookMarkTxt, bMarks);
+    std::fstream bookMarkTxt(fileName + "_bookmark.txt", std::ios::out | std::ios::trunc);
+    ExportBookMark(bookMarkTxt, bMarks, &docFirst);
 
     return 0;
 }
@@ -856,10 +864,28 @@ int ProcTxtToXml(const char *file, std::map<int, std::vector<std::string> >& all
 	return 0;
 }
 
+int InitXmlDoc(const char* docName)
+{
+    TiXmlDocument doc;
+    doc.LoadFile(docName, TIXML_ENCODING_LEGACY);
+    TiXmlElement* root = doc.RootElement();
+    if (NULL == root) {
+        TiXmlElement html("html");
+        TiXmlElement head("head");
+        TiXmlElement body("body");
+        html.InsertEndChild(head);
+        html.InsertEndChild(body);
+        doc.InsertEndChild(html);
+    }
+    doc.SaveFile(docName);
+    return 0;
+}
+
 int GenXmlDoc(const char* docName, int type, const char *title, const char *pageno)
 {
+    InitXmlDoc(docName);
 	TiXmlDocument doc;
-	doc.LoadFile(docName);
+	doc.LoadFile(docName, TIXML_ENCODING_LEGACY);
 
 	if (docName == NULL || title == NULL || pageno == NULL) {
 		return 0;
@@ -1083,11 +1109,7 @@ int PicMain( int argc, char* argv[] )
 
 int main( int argc, char* argv[] )
 {
-	std::string fileName = "ying_yong_kuang_jia_de_she_ji";
-    std::string genXmlCmd = "copy bak.xml ";
-    genXmlCmd += fileName + ".xml";
-	system("ls");
-    system(genXmlCmd.c_str());
+	std::string fileName = "";
     XmlMain(fileName, 13-1);
 	// SetConsoleOutputCP(CP_UTF8);
 	// SetConsoleOutputCP(CP_ACP);
@@ -1095,6 +1117,7 @@ int main( int argc, char* argv[] )
     DelBookMark(fileName);
 	AddBookMark(fileName);
 
+    return 0;
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
 	//MergeDoc("two-with-bookmarks.pdf", "two-with-bookmarks.pdf", "multi-with-bookmarks.pdf", "bookmark.xml");
