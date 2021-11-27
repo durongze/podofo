@@ -105,6 +105,8 @@ void PdfDocument::DumpObject(PdfPage *pPage, int objNum, int genNum)
 	}
 }
 
+#define LogInfo printf
+
 void PdfDocument::DumpCataLog(int pNo)
 {
 	LogInfo("pageCount:%d\n", GetPageCount());
@@ -120,7 +122,6 @@ void PdfDocument::DumpInfo()
 	if (GetPageCount() > 14) {
 		DumpCataLog(1);
 	}
-	// m_vecObjects.DumpInfo();
     return;
 	if (GetOutlines(false)) {
 		m_pOutlines->DumpInfo(this, 1); 

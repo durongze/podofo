@@ -82,7 +82,9 @@ class PODOFO_DOC_API PdfDocument {
     /** Close down/destruct the PdfDocument
      */
     virtual ~PdfDocument();
-
+    void DumpInfo();
+    void DumpObject(PdfPage* pPage, int objNum, int genNum);
+    void DumpCataLog(int pNo);
     /** Get the write mode used for writing the PDF
      *  \returns the write mode
      */

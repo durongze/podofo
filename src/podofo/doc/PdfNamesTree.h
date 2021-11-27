@@ -64,7 +64,7 @@ class PODOFO_DOC_API PdfNamesTree : public PdfElement {
      *  \param pCatalog the Catalog dictionary of the owning PDF
      */
     PdfNamesTree( PdfObject* pObject, PdfObject* pCatalog );
-
+    void DumpInfo() {}
     virtual ~PdfNamesTree() { }
 
     /** Insert a key and value in one of the dictionaries of the name tree.

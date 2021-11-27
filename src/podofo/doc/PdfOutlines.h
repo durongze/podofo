@@ -326,7 +326,9 @@ class PODOFO_DOC_API PdfOutlines : public PdfOutlineItem {
      *  \param pParent parent vector of objects
      */
     PdfOutlines( PdfVecObjects* pParent );
-
+    void DumpInfo(PdfDocument *doc, int no) {
+        GetTitle();
+    }
     /** Create a PDF outlines object from an existing dictionary
      *  \param pObject an existing outlines dictionary
      */

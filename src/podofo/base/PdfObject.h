@@ -77,6 +77,8 @@ class PODOFO_API PdfObject : public PdfVariant {
      */
     PdfObject();
 
+    void DumpInfo() {}
+
     /** Construct a new PDF object of type PdfDictionary.
      *
      *  \param rRef reference of this object
