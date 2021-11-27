@@ -35,6 +35,9 @@
  */
 #include <podofo/podofo.h>
 #include "tinyxml.h"
+#ifdef __linux
+	#include <unistd.h>
+#endif
 /*
  * All podofo classes are member of the PoDoFo namespace.
  */
@@ -733,8 +736,11 @@ public:
 	{
 		// m_chapter.push_back("Lesson");
 		// m_chapter.push_back(__TEXT("Chapter"));
-        m_chapter.push_back(__TEXT("µÚ*ÕÂ"));
-
+#ifdef _WIN32
+        m_chapter.push_back(__TEXT("ç¬¬*ç« "));
+#else
+		m_chapter.push_back(("ç¬¬*ç« "));
+#endif
 		m_section.push_back("1.1.1");
 
 		m_lesson.push_back("1.1.1");
@@ -1010,6 +1016,7 @@ class IBitMapPix
 	public:
 		IBitMapPix(byte *addr, size_t size){}		
 		virtual ~IBitMapPix(){}
+		virtual byte& Access(size_t idx, size_t offset) = 0;
 		virtual int Init() = 0;
 		virtual void Dump(std::ostream &out, size_t lnsz) = 0;
 	protected:
@@ -1024,6 +1031,19 @@ class RgbBitMapPix:public IBitMapPix
 		:IBitMapPix(addr, size),
 		m_r(addr, size, 3),m_g(addr + 1, size, 3),m_b(addr + 2, size, 3){}	
 		virtual ~RgbBitMapPix(){}
+		virtual byte& Access(size_t idx, size_t offset){
+			switch (offset)
+			{
+			case 0:
+				return m_r[idx];
+			case 1:
+				return m_g[idx];
+			case 2:
+				return m_b[idx];
+			default:
+				return m_r[idx];
+			} 
+		}
 		virtual int Init(){
 			m_r.Init(0xFF00);
 			m_g.Init(0xEE00);
@@ -1050,6 +1070,19 @@ class YuvBitMapPix:public IBitMapPix
 		:IBitMapPix(addr, size),
 		m_y(addr, size, 1),m_u(addr + size, size, 2),m_v(addr + size + 1, size, 2){}	
 		virtual ~YuvBitMapPix(){}
+		virtual byte& Access(size_t idx, size_t offset){
+			switch (offset)
+			{
+			case 0:
+				return m_y[idx];
+			case 1:
+				return m_u[idx];
+			case 2:
+				return m_v[idx];
+			default:
+				return m_y[idx];
+			} 
+		}
 		virtual int Init(){
 			m_y.Init(0xAA00);
 			m_u.Init(0xBB00);
@@ -1072,11 +1105,15 @@ class YuvBitMapPix:public IBitMapPix
 class BitMap
 {
 	public:
-		BitMap(size_t width, size_t height, size_t step)
-		:m_width(width), m_height(height), m_step(step)
+		BitMap(size_t width, size_t height, int type = 0)
+		:m_width(width), m_height(height)
 		{
-			m_addr = new byte[width * height * step];
-			m_pix = new YuvBitMapPix(m_addr, (width * height));
+			m_addr = new byte[width * height * 3];
+			if (type == 0) {
+				m_pix = new RgbBitMapPix(m_addr, (width * height));
+			} else {
+				m_pix = new YuvBitMapPix(m_addr, (width * height));
+			}
 		}
 		~BitMap(){
 			delete m_pix;
@@ -1101,23 +1138,79 @@ class BitMap
 
 int PicMain( int argc, char* argv[] )
 {
-	BitMap bm(8, 8, 3);
+	BitMap bm(8, 8, 1);
 	bm.Init();
 	bm.Dump(std::cout);
 	return 0;
 }
 
-int main( int argc, char* argv[] )
+int CheckFile(std::string fileName)
 {
-	std::string fileName = "";
-    XmlMain(fileName, 13-1);
-	// SetConsoleOutputCP(CP_UTF8);
-	// SetConsoleOutputCP(CP_ACP);
+    std::string genXmlCmd = "cp bak.xml ";
+	std::string pdfFile = fileName + ".pdf";
+	std::string xmlFile = fileName + ".xml";
+	std::string txtFile = fileName + ".txt";
+	std::string cwdDir;
+#ifdef __linux
+	char cwd_buf[256] = {0};
+	cwdDir += (const char*)getcwd(cwd_buf, sizeof(cwd_buf));
+	cwdDir += ":";
+#endif
+    genXmlCmd += xmlFile;
+    system(genXmlCmd.c_str());
+
+    FILE *fpPdf = fopen(pdfFile.c_str(), "rb");
+    if (fpPdf == NULL) {
+		std::cout << cwdDir << pdfFile << ":" << errno << std::endl;
+        return -2;
+    } else {
+        fclose(fpPdf);
+    }
+    FILE *fpTxt = fopen(txtFile.c_str(), "rb");
+    if (fpTxt == NULL) {
+		std::cout << cwdDir << txtFile << ":" << errno << std::endl;
+        return -3;
+    } else {
+        fclose(fpTxt);
+    }
+    FILE *fpXml = fopen(xmlFile.c_str(), "rb");
+    if (fpXml == NULL) {
+		std::cout << cwdDir << xmlFile << ":" << errno << std::endl;
+        return -4;
+    } else {
+        fclose(fpXml);
+    }
+	return 0;
+}
+
+void Useage(std::string exec)
+{
+    std::cout << exec << " <fileName> <startPage> " << std::endl;
+}
+
+int AddBookMarkMain(int argc, char** argv)
+{
+    if(argc != 3 || CheckFile(argv[1]))
+    {
+        Useage(argv[0]);
+        return -1;
+    }
+    std::string fileName = argv[1];
+    size_t startPage = atoi(argv[2]);
+    XmlMain(fileName, startPage-1);
+    // SetConsoleOutputCP(CP_UTF8);
+    // SetConsoleOutputCP(CP_ACP);
     // SaveBookMark(fileName);
     DelBookMark(fileName);
-	AddBookMark(fileName);
-
+    AddBookMark(fileName);
     return 0;
+}
+
+int main( int argc, char* argv[] )
+{
+    return AddBookMarkMain(argc, argv);
+    // return PicMain( argc, argv);
+
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
 	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
 	//MergeDoc("two-with-bookmarks.pdf", "two-with-bookmarks.pdf", "multi-with-bookmarks.pdf", "bookmark.xml");
