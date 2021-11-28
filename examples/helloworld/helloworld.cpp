@@ -853,7 +853,7 @@ int ParseLine(const std::string& lineSrc, std::vector<std::string>& allCol)
 	return 0;
 }
 
-int ProcTxtToXml(const char *file, std::map<int, std::vector<std::string> >& allData)
+int ProcTxtToMap(const std::string &file, std::map<int, std::vector<std::string> >& allData)
 {
 	std::fstream s(file, std::fstream::in | std::fstream::out);
 	int idxRow = 0;
@@ -868,6 +868,39 @@ int ProcTxtToXml(const char *file, std::map<int, std::vector<std::string> >& all
 		}
 	}
 	return 0;
+}
+
+int WriteMapToTxt(const std::string &file, std::map<int, std::vector<std::string> >& allData)
+{
+    std::fstream s(file, std::fstream::out | std::fstream::trunc);
+    for (auto iterLine = allData.begin(); iterLine != allData.end(); ++iterLine) {
+        for (auto iterWord = iterLine->second.begin(); iterLine->second.end() != iterWord; ++iterWord) {
+            s << *iterWord << " ";
+        }
+        s << std::endl;
+    }
+    return 0;
+}
+
+int SplitPageNoFromTxt(const std::string &file)
+{
+    std::string txtFile = file + ".txt";
+    std::map<int, std::vector<std::string> > allData;
+    ProcTxtToMap(file, allData);
+    for (auto iterLine = allData.begin(); iterLine != allData.end(); ++iterLine) {
+        auto iterWord = iterLine->second.rbegin();
+        if (iterLine->second.rend() == iterWord) {
+            continue;
+        }
+        for (auto iterCh = iterWord->crbegin(); iterCh != iterWord->crend(); ++iterCh) {
+            if (*iterCh < '0' || *iterCh > '9') {
+                iterWord->insert(iterCh.base(), 2, TEXT(' '));
+                break;
+            }
+        }
+    }
+    WriteMapToTxt(txtFile + ".txt", allData);
+    return 0;
 }
 
 int InitXmlDoc(const char* docName)
@@ -937,7 +970,7 @@ int XmlMain(std::string fname, int pageoffset)
 	std::string title;
 	std::string file = (fname + ".txt");
 	std::map<int, std::vector<std::string> > allData;
-	ProcTxtToXml(file.c_str(), allData);
+	ProcTxtToMap(file.c_str(), allData);
 	std::map<int, std::vector<std::string> >::iterator iter;
 	std::vector<std::string>::iterator iterLine;
 	for (iter = allData.begin(); allData.end() != iter; iter++)
@@ -1216,6 +1249,7 @@ int AppMain(int argc, char* argv[])
 
 int main( int argc, char* argv[] )
 {
+    // return SplitPageNoFromTxt("");
     return AddBookMarkMain("", 2);
     // return AppMain( argc, argv);
     // return PicMain( argc, argv);
