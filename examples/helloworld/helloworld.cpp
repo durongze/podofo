@@ -737,9 +737,9 @@ public:
 		// m_chapter.push_back("Lesson");
 		// m_chapter.push_back(__TEXT("Chapter"));
 #ifdef _WIN32
-        m_chapter.push_back(__TEXT("ç¬¬*ç« "));
+        m_chapter.push_back(__TEXT("µÚ*ÕÂ"));
 #else
-		m_chapter.push_back(("ç¬¬*ç« "));
+		m_chapter.push_back(("µÚ*ÕÂ"));
 #endif
 		m_section.push_back("1.1.1");
 
@@ -875,21 +875,21 @@ int InitXmlDoc(const char* docName)
     TiXmlDocument doc;
     doc.LoadFile(docName, TIXML_ENCODING_LEGACY);
     TiXmlElement* root = doc.RootElement();
-    if (NULL == root) {
-        TiXmlElement html("html");
-        TiXmlElement head("head");
-        TiXmlElement body("body");
-        html.InsertEndChild(head);
-        html.InsertEndChild(body);
-        doc.InsertEndChild(html);
+    if (NULL != root) {
+        doc.Clear();
     }
+    TiXmlElement html("html");
+    TiXmlElement head("head");
+    TiXmlElement body("body");
+    html.InsertEndChild(head);
+    html.InsertEndChild(body);
+    doc.InsertEndChild(html);
     doc.SaveFile(docName);
     return 0;
 }
 
 int GenXmlDoc(const char* docName, int type, const char *title, const char *pageno)
 {
-    InitXmlDoc(docName);
 	TiXmlDocument doc;
 	doc.LoadFile(docName, TIXML_ENCODING_LEGACY);
 
@@ -930,6 +930,7 @@ int XmlMain(std::string fname, int pageoffset)
 #ifdef WIN32
 	SetConsoleOutputCP(CP_WINUNICODE);
 #endif
+    InitXmlDoc((fname + ".xml").c_str());
 	int idx = 0;
 	int type = 0;
 	std::string pageno = "1";
@@ -949,7 +950,10 @@ int XmlMain(std::string fname, int pageoffset)
 				title += *iterLine;
 			}
 			else {
-				pageno = *iterLine;
+                if (!std::isdigit(iterLine->at(0))) {
+                    title += *iterLine;
+                }
+                pageno = *iterLine;
 			}
 		}
 		pageno = std::to_string(atoi(pageno.c_str()) + pageoffset);
