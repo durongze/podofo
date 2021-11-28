@@ -950,7 +950,8 @@ int XmlMain(std::string fname, int pageoffset)
 				title += *iterLine;
 			}
 			else {
-                if (!std::isdigit(iterLine->at(0))) {
+                bool isnum = iterLine->at(0) >= '0' && iterLine->at(0) <= '9';
+                if (!isnum) {
                     title += *iterLine;
                 }
                 pageno = *iterLine;
