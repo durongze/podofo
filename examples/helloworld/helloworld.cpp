@@ -1188,15 +1188,8 @@ void Useage(std::string exec)
     std::cout << exec << " <fileName> <startPage> " << std::endl;
 }
 
-int AddBookMarkMain(int argc, char** argv)
+int AddBookMarkMain(const std::string &fileName, size_t startPage)
 {
-    if(argc != 3 || CheckFile(argv[1]))
-    {
-        Useage(argv[0]);
-        return -1;
-    }
-    std::string fileName = argv[1];
-    size_t startPage = atoi(argv[2]);
     XmlMain(fileName, startPage-1);
     // SetConsoleOutputCP(CP_UTF8);
     // SetConsoleOutputCP(CP_ACP);
@@ -1206,9 +1199,20 @@ int AddBookMarkMain(int argc, char** argv)
     return 0;
 }
 
+int AppMain(int argc, char* argv[])
+{
+    if (argc != 3 || CheckFile(argv[1]))
+    {
+        Useage(argv[0]);
+        return -1;
+    }
+    return AddBookMarkMain(argv[1], atoi(argv[2]));
+}
+
 int main( int argc, char* argv[] )
 {
-    return AddBookMarkMain(argc, argv);
+    return AddBookMarkMain("", 2);
+    // return AppMain( argc, argv);
     // return PicMain( argc, argv);
 
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
