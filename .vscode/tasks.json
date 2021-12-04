@@ -1,5 +1,5 @@
 {
- 
+    // CMAKE_BUILD_TYPE
     "tasks": [
         {
             "type": "cppbuild",

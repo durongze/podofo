@@ -843,7 +843,7 @@ int ParseLine(const std::string& lineSrc, std::vector<std::string>& allCol)
 		else {
 			element = line.substr(idxCol, idxTab - idxCol);
 			idxCol = idxTab;
-			if (element.length() > 1) {
+			if (element.length() > 0) {
 				allCol.push_back(element);
 			}
 		}
@@ -956,6 +956,11 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 	return 0;
 }
 
+int IsPageNo(const std::string &pageNo)
+{
+    return pageNo.at(0) >= '0' && pageNo.at(0) <= '9';
+}
+
 int XmlMain(std::string fname, int pageoffset)
 {
 #ifdef WIN32
@@ -969,24 +974,16 @@ int XmlMain(std::string fname, int pageoffset)
 	std::string file = (fname + ".txt");
 	std::map<int, std::vector<std::string> > allData;
 	ProcTxtToMap(file.c_str(), allData);
-	std::map<int, std::vector<std::string> >::iterator iter;
-	std::vector<std::string>::iterator iterLine;
-	for (iter = allData.begin(); allData.end() != iter; iter++)
+	std::map<int, std::vector<std::string> >::iterator lineIter;
+	std::vector<std::string>::iterator wordIter;
+	for (lineIter = allData.begin(); allData.end() != lineIter; lineIter++)
 	{
-		for (idx = 1, title = "", iterLine = iter->second.begin(); iter->second.end() != iterLine; iterLine++, idx++) {
-			if (iter->second.size() == 1) {
-				title = *iterLine;
+		for (idx = 0, title = "", wordIter = lineIter->second.begin(); lineIter->second.end() != wordIter; wordIter++) {
+			if (lineIter->second.size() == ++idx && IsPageNo(*wordIter)) {
+				pageno = *wordIter;
+				break;
 			}
-			else if (idx < iter->second.size()) {
-				title += *iterLine;
-			}
-			else {
-                bool isnum = iterLine->at(0) >= '0' && iterLine->at(0) <= '9';
-                if (!isnum) {
-                    title += *iterLine;
-                }
-                pageno = *iterLine;
-			}
+			title += *wordIter;
 		}
 		pageno = std::to_string(atoi(pageno.c_str()) + pageoffset);
 		type = cfg.MatchType(title);
@@ -1237,9 +1234,12 @@ int AppMain(int argc, char* argv[])
 
 int main( int argc, char* argv[] )
 {
+#ifdef __linux
+	return AppMain(argc, argv);
+#else
     // return SplitPageNoFromTxt("");
     return AddBookMarkMain("", 2);
-    // return AppMain( argc, argv);
+#endif
     // return PicMain( argc, argv);
 
 	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
