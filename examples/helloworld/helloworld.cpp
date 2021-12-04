@@ -958,7 +958,12 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 
 int IsPageNo(const std::string &pageNo)
 {
-    return pageNo.at(0) >= '0' && pageNo.at(0) <= '9';
+	for (std::string::const_iterator iter = pageNo.cbegin(); iter != pageNo.cend(); ++iter) {
+		if (*iter < '0' || *iter > '9') {
+			return false;
+		}
+	}
+    return true;
 }
 
 int XmlMain(std::string fname, int pageoffset)
