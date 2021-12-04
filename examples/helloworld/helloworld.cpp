@@ -1184,7 +1184,6 @@ int CheckFile(std::string fileName)
 {
     std::string genXmlCmd = "cp bak.xml ";
 	std::string pdfFile = fileName + ".pdf";
-	std::string xmlFile = fileName + ".xml";
 	std::string txtFile = fileName + ".txt";
 	std::string cwdDir;
 #ifdef __linux
@@ -1192,8 +1191,6 @@ int CheckFile(std::string fileName)
 	cwdDir += (const char*)getcwd(cwd_buf, sizeof(cwd_buf));
 	cwdDir += ":";
 #endif
-    genXmlCmd += xmlFile;
-    system(genXmlCmd.c_str());
 
     FILE *fpPdf = fopen(pdfFile.c_str(), "rb");
     if (fpPdf == NULL) {
@@ -1208,13 +1205,6 @@ int CheckFile(std::string fileName)
         return -3;
     } else {
         fclose(fpTxt);
-    }
-    FILE *fpXml = fopen(xmlFile.c_str(), "rb");
-    if (fpXml == NULL) {
-		std::cout << cwdDir << xmlFile << ":" << errno << std::endl;
-        return -4;
-    } else {
-        fclose(fpXml);
     }
 	return 0;
 }
