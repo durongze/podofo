@@ -37,6 +37,7 @@
 #include "tinyxml.h"
 #ifdef __linux
 	#include <unistd.h>
+    #define __TEXT(x)  x
 #endif
 /*
  * All podofo classes are member of the PoDoFo namespace.
@@ -736,11 +737,8 @@ public:
 	{
 		// m_chapter.push_back("Lesson");
 		// m_chapter.push_back(__TEXT("Chapter"));
-#ifdef _WIN32
-        m_chapter.push_back(__TEXT("µÚ*ÕÂ"));
-#else
-		m_chapter.push_back(("µÚ*ÕÂ"));
-#endif
+
+        m_chapter.push_back(__TEXT("ç¬¬*ç« "));
 		m_section.push_back("1.1.1");
 
 		m_lesson.push_back("1.1.1");
@@ -894,7 +892,7 @@ int SplitPageNoFromTxt(const std::string &file)
         }
         for (auto iterCh = iterWord->crbegin(); iterCh != iterWord->crend(); ++iterCh) {
             if (*iterCh < '0' || *iterCh > '9') {
-                iterWord->insert(iterCh.base(), 2, TEXT(' '));
+                iterWord->insert(iterCh.base(), 2, __TEXT(' '));
                 break;
             }
         }
