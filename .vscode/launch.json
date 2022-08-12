@@ -8,8 +8,10 @@
             "name": "g++ - 生成和调试活动文件",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/du/code/pdf/podofo-master/dyz/examples/helloworld/helloworld",
+	    "program": "/home/du/code/pdf/podofo-master/dyz/examples/helloworld/helloworld",
             "args": ["android", "14"],
+            // "program": "d:\\code\\podofo-0.9.6\\dyzbuild\\examples\\helloworld\\helloworld.exe",
+            // "args": ["d:\\code\\podofo-0.9.6\\dyzbuild\\android", "16"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -22,7 +24,8 @@
                 }
             ],
             "preLaunchTask": "C/C++: g++ 生成活动文件",
-            "miDebuggerPath": "/usr/bin/gdb"
+	    "miDebuggerPath": "/usr/bin/gdb"
+            // "miDebuggerPath": "E:\\program\\StrawberryPerl\\c\\bin\\gdb.exe"
         }
     ]
 }

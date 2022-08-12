@@ -35,9 +35,12 @@
  */
 #include <podofo/podofo.h>
 #include "tinyxml.h"
+#include <regex>
 #ifdef __linux
 	#include <unistd.h>
     #define __TEXT(x)  x
+// #elif __WIN32
+	// #define __TEXT(x)  x
 #endif
 /*
  * All podofo classes are member of the PoDoFo namespace.
@@ -735,74 +738,26 @@ class XmlCfg
 public:
 	XmlCfg()
 	{
-		// m_chapter.push_back("Lesson");
-		// m_chapter.push_back(__TEXT("Chapter"));
-
-        m_chapter.push_back(__TEXT("第*章"));
-		m_section.push_back("1.1.1");
-
-		m_lesson.push_back("1.1.1");
-		// m_lesson.push_back("[0-9].[0-9]");
-	}
-
-	bool ChapterCond(std::string chapter, std::string cond)
-	{
-		wchar_t *pchapter = AnsiToUnicode(chapter.c_str());
-		wchar_t *piter = AnsiToUnicode(cond.c_str());
-		bool eq = pchapter[0] == piter[0] && (pchapter[2] == piter[2] || pchapter[3] == piter[2]);
-		delete[] pchapter;
-		delete[] piter;
-		return eq;
 	}
 	int MatchChapter(std::string chapter)
 	{
-		std::vector<std::string>::iterator iter;
-		for (iter = m_chapter.begin(); m_chapter.end() != iter; iter++) {
-			if (ChapterCond(chapter, *iter)) {
-				return 1;
-			}
-		}
-		return 0;
+        std::string pattern(__TEXT("Chapter\s{0,}\d{1,}|第*章|\d{1,}\D|\d{1,}.\D"));
+        m_chapter=(pattern);
+		return std::regex_match(chapter, m_chapter);
 	}
-	bool SectionCond(std::string section, std::string cond)
-	{
-		wchar_t *psection = AnsiToUnicode(section.c_str());
-		wchar_t *piter = AnsiToUnicode(cond.c_str());
-		bool eq = psection[0] == piter[0];// && (psection[2] == piter[2] || psection[3] == piter[2]);
-		bool eqNum = (psection[1] == piter[1] && psection[3] != piter[3]) || (psection[2] == piter[1] && psection[4] != piter[3]);
-		delete[] psection;
-		delete[] piter;
-		return eqNum;
-	}
+
 	int MatchSection(std::string section)
 	{
-		std::vector<std::string>::iterator iter;
-		for (iter = m_section.begin(); m_section.end() != iter; iter++) {
-			if (SectionCond(section, *iter)) {
-				return 1;
-			}
-		}
-		return 0;
+        std::string pattern("\d{1,}.\d{1,}\D|\d{1,}.\d{1,}.\D");
+        m_section = (pattern);
+        return std::regex_match(section, m_section);
 	}
-	bool LessonCond(std::string lesson, std::string cond)
-	{
-		wchar_t *plesson = AnsiToUnicode(lesson.c_str());
-		wchar_t *piter = AnsiToUnicode(cond.c_str());
-		bool eq = plesson[0] == piter[0] && (plesson[2] == piter[2] || plesson[3] == piter[2]);
-		bool eqNum = (plesson[1] == piter[1] && (plesson[3] == piter[3])) || (plesson[2] == piter[1] && (plesson[4] == piter[3]));
-		delete[] plesson;
-		delete[] piter;
-		return eqNum;
-	}
+
 	int MatchLesson(std::string lesson)
 	{
-		std::vector<std::string>::iterator iter;
-		for (iter = m_lesson.begin(); m_lesson.end() != iter; iter++) {
-			if (LessonCond(lesson, *iter)) {
-				return 1;
-			}
-		}
-		return 0;
+        std::string pattern("\d{1,}.\d{1,}.\d{1,}\D|\d{1,}.\d{1,}.\d{1,}.\D");
+        m_lesson = (pattern);
+        return std::regex_match(lesson, m_lesson);
 	}
 	int MatchType(std::string title) 
 	{
@@ -818,9 +773,9 @@ public:
 		return 3;
 	}
 private:
-	std::vector<std::string> m_chapter;
-	std::vector<std::string> m_section;
-	std::vector<std::string> m_lesson;
+	std::regex m_chapter;
+	std::regex m_section;
+	std::regex m_lesson;
 };
 
 XmlCfg cfg;
@@ -884,14 +839,14 @@ int SplitPageNoFromTxt(const std::string &file)
 {
     std::string txtFile = file + ".txt";
     std::map<int, std::vector<std::string> > allData;
-    ProcTxtToMap(file, allData);
+    ProcTxtToMap(txtFile, allData);
     for (auto iterLine = allData.begin(); iterLine != allData.end(); ++iterLine) {
         auto iterWord = iterLine->second.rbegin();
         if (iterLine->second.rend() == iterWord) {
             continue;
         }
         for (auto iterCh = iterWord->crbegin(); iterCh != iterWord->crend(); ++iterCh) {
-            if (*iterCh < '0' || *iterCh > '9') {
+            if ((*iterCh) <= '0' || (*iterCh) >= '9') {
                 iterWord->insert(iterCh.base(), 2, __TEXT(' '));
                 break;
             }
@@ -1242,8 +1197,9 @@ int main( int argc, char* argv[] )
 #ifdef __linux
 	return AppMain(argc, argv);
 #else
-    // return SplitPageNoFromTxt("");
-    return AddBookMarkMain("", 2);
+    std::string file_name = __TEXT("android");
+    SplitPageNoFromTxt(file_name);
+    return AddBookMarkMain(file_name, 15);
 #endif
     // return PicMain( argc, argv);
 
