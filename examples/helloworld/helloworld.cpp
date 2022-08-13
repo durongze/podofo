@@ -813,6 +813,9 @@ int ProcTxtToMap(const std::string &file, std::map<int, std::vector<std::string>
 	int idxRow = 0;
 	for (std::string line; std::getline(s, line); ++idxRow) {
 		std::vector<std::string> allCol;
+		if (259 == idxRow) {
+			std::cout << "idxRow:" << idxRow << std::endl;
+		}
 		ParseLine(line, allCol);
 		if (allCol.size() != 0) {
 			allData[idxRow] = allCol;
@@ -836,19 +839,35 @@ int WriteMapToTxt(const std::string &file, std::map<int, std::vector<std::string
     return 0;
 }
 
+int MergeLastWord(std::vector<std::string> & line)
+{
+	int idx = 0;
+	std::string tail = *line.rbegin();
+	for (auto iterWord = line.rbegin(); iterWord != line.rend(); ++iterWord, ++idx) {
+		if (1 == idx) {
+			*iterWord += tail;
+			line.pop_back();
+		}
+	}
+}
+
 int SplitPageNoFromTxt(const std::string &file)
 {
     std::string txtFile = file + ".txt";
     std::map<int, std::vector<std::string> > allData;
     ProcTxtToMap(txtFile, allData);
     for (auto iterLine = allData.begin(); iterLine != allData.end(); ++iterLine) {
-        auto iterWord = iterLine->second.rbegin();
+		if (iterLine->first == 259) {
+			std::cout << "line:" << iterLine->first << std::endl;
+		}
+        MergeLastWord(iterLine->second);
+		auto iterWord = iterLine->second.rbegin();
         if (iterLine->second.rend() == iterWord) {
             continue;
         }
         for (auto iterCh = iterWord->crbegin(); iterCh != iterWord->crend(); ++iterCh) {
-            if ((*iterCh) <= '0' || (*iterCh) >= '9') {
-                iterWord->insert(iterCh.base(), 2, __TEXT(' '));
+            if ((*iterCh) < '0' || (*iterCh) > '9') {
+                iterWord->insert(iterCh.base(), 8, __TEXT(' '));
                 break;
             }
         }
