@@ -739,28 +739,29 @@ public:
 	XmlCfg()
 	{
 	}
-	int MatchChapter(std::string chapter)
+	bool MatchChapter(std::string chapter)
 	{
-        std::string pattern(__TEXT("Chapter\s{0,}\d{1,}|第*章|\d{1,}\D|\d{1,}.\D"));
+        std::string pattern(__TEXT("^\\s*Chapter\\s*\\d*|^\\s*第.*章|^\\s*\\d{1,}[^\\.\\d].*|^\\s*\\d{1,}\\.[^\\d].*"));
         m_chapter=(pattern);
-		return std::regex_match(chapter, m_chapter);
+		return std::regex_search(chapter, m_chapter);
 	}
 
 	int MatchSection(std::string section)
 	{
-        std::string pattern("\d{1,}.\d{1,}\D|\d{1,}.\d{1,}.\D");
+        std::string pattern(__TEXT("^\\s*第.*节|^\\s*\\d{1,}\\.\\d{1,3}[^\\.\\d].*|^\\s*\\d{1,}\\.\\d{1,}\\.\\D.*"));
         m_section = (pattern);
-        return std::regex_match(section, m_section);
+        return std::regex_search(section, m_section);
 	}
 
 	int MatchLesson(std::string lesson)
 	{
-        std::string pattern("\d{1,}.\d{1,}.\d{1,}\D|\d{1,}.\d{1,}.\d{1,}.\D");
-        m_lesson = (pattern);
-        return std::regex_match(lesson, m_lesson);
+        std::string pattern("^\\s*\\d{1,}\\.\\d{1,}\\.\\d{1,}[^\\.\\d].*|^\\s*\\d{1,}\\.\\d{1,}\\.\\d{1,}\\.\\D.*");
+		m_lesson = (pattern);
+        return std::regex_search(lesson, m_lesson);
 	}
 	int MatchType(std::string title) 
 	{
+		std::cout << "title:" << title << std::endl;
 		if (MatchChapter(title)) {
 			return 1;
 		}
@@ -1177,6 +1178,7 @@ int AddBookMarkMain(const std::string &fileName, size_t startPage)
     // SetConsoleOutputCP(CP_UTF8);
     // SetConsoleOutputCP(CP_ACP);
     // SaveBookMark(fileName);
+	SplitPageNoFromTxt(fileName);
     DelBookMark(fileName);
     AddBookMark(fileName);
     return 0;
