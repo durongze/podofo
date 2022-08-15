@@ -849,6 +849,7 @@ int MergeLastWord(std::vector<std::string> & line)
 			line.pop_back();
 		}
 	}
+	return 0;
 }
 
 int SplitPageNoFromTxt(const std::string &file)
