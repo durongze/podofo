@@ -11,6 +11,10 @@ add_library(liblua STATIC ${LUA_SRCS_LIST})
 add_executable(lua ${LUA_SRCS_LIST} "src/lua.c")
 add_executable(luac ${LUA_SRCS_LIST} "src/luac.c")
 
-target_link_libraries(lua PRIVATE m dl)
-target_link_libraries(luac PRIVATE m dl)
-
+IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	target_link_libraries(lua PRIVATE m dl)
+	target_link_libraries(luac PRIVATE m dl)
+ELSEIF(CMAKE_SYSTEM_NAME MATCHES "Windows")
+	message("target_link_libraries(lua PRIVATE m dl)")
+	message("target_link_libraries(luac PRIVATE m dl)")
+ENDIF()

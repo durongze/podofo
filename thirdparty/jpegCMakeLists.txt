@@ -14,10 +14,13 @@ file(GLOB_RECURSE _RD_SRC_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ./rd*.c ./cd
 # jidctint.lo jquant1.lo jquant2.lo jutils.lo jmemmgr.lo jmemnobs.lo
 file(GLOB_RECURSE _J_SRC_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "./j*.c" )         
 
+configure_file(jconfig.txt jconfig.h)
+
 IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	list(REMOVE_ITEM _J_SRC_LIST jmemdos.c jmemmac.c)
 ELSEIF(CMAKE_SYSTEM_NAME MATCHES "Windows")
-	list(REMOVE_ITEM _J_SRC_LIST jmemmac.c)
+	list(REMOVE_ITEM _J_SRC_LIST jmemansi.c jmemdos.c jmemmac.c)
+	message("CMAKE_SYSTEM_NAME:${CMAKE_SYSTEM_NAME}")
 ENDIF()
 
 message("CMAKE_SYSTEM_NAME:${CMAKE_SYSTEM_NAME}")

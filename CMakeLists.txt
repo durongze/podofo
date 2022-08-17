@@ -35,7 +35,7 @@ include(cmake/dep_harfbuzz.cmake)
 include(cmake/dep_jpeg.cmake)
 include(cmake/dep_lua.cmake)
 include(cmake/dep_png.cmake)
-include(cmake/dep_tiff.cmake)
+#include(cmake/dep_tiff.cmake)
 include(cmake/dep_zlib.cmake)
 
 if(POLICY CMP0033)
