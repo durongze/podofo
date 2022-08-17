@@ -11,3 +11,4 @@ endif()
 include_directories(${${LIBNAME}_DIR}/include ${${LIBNAME}_DIR}/ ${CMAKE_BINARY_DIR}/thirdparty/${LIBNAME})
 
 set(FREETYPE_LIBRARY freetype)
+set(FREETYPE_LIBRARIES $<TARGET_OBJECTS:freetype>)

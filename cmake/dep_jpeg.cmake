@@ -1,5 +1,5 @@
-if(NOT TARGET jpeg-turbo)
-  set(LIBNAME jpeg-turbo)
+if(NOT TARGET jpeg)
+  set(LIBNAME jpeg)
   set(${LIBNAME}_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/${LIBNAME})
   message("${LIBNAME}_DIR:${${LIBNAME}_DIR}")
   if(CMAKE_SYSTEM_NAME MATCHES "Windows")
@@ -10,4 +10,5 @@ endif()
 
 include_directories(${${LIBNAME}_DIR}/include ${${LIBNAME}_DIR}/ ${CMAKE_BINARY_DIR}/thirdparty/${LIBNAME})
 
-set(JPEG_LIBRARY jpeg-turbo)
+set(JPEG_LIBRARY jpeg)
+set(JPEG_LIBRARIES jpeg)
