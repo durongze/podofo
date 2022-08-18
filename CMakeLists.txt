@@ -30,13 +30,13 @@ if(POLICY CMP0075)
 CMAKE_POLICY(SET CMP0075 NEW) # https://cmake.org/cmake/help/v3.0/policy/CMP0075.html
 endif()
 
-include(cmake/dep_freetype.cmake)
-include(cmake/dep_harfbuzz.cmake)
-include(cmake/dep_jpeg.cmake)
-include(cmake/dep_lua.cmake)
-include(cmake/dep_png.cmake)
-#include(cmake/dep_tiff.cmake)
 include(cmake/dep_zlib.cmake)
+include(cmake/dep_jpeg.cmake)
+include(cmake/dep_png.cmake)
+include(cmake/dep_harfbuzz.cmake)
+include(cmake/dep_freetype.cmake)
+include(cmake/dep_lua.cmake)
+#include(cmake/dep_tiff.cmake)
 
 if(POLICY CMP0033)
 CMAKE_POLICY(SET CMP0033 NEW) # https://cmake.org/cmake/help/v3.0/policy/CMP0033.html

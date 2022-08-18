@@ -8,8 +8,9 @@ pushd dyzbuild
 	@rem del * /q /s
 	@rem cmake .. -G"Visual Studio 16 2019" -A Win64
 	@rem cmake --build . --target clean
+	@rem cmake --build . -j16
 	cmake ..
-	cmake --build . -j16
+	cmake --build . --target examples\helloworld\helloworld
 	dir .\examples\helloworld\helloworld.exe
 	@rem .\examples\helloworld\helloworld.exe
 popd

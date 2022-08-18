@@ -4,10 +4,8 @@ IF(NOT PODOFO_MAIN_CMAKELISTS_READ)
   MESSAGE(FATAL_ERROR "Run cmake on the CMakeLists.txt in the project root, not the one in the 'src' directory. You will need to delete CMakeCache.txt from the current directory.")
 ENDIF(NOT PODOFO_MAIN_CMAKELISTS_READ)
 
-SET(PODOFO_BASE_DEPEND_TARGET CACHE INTERNAL
-    "Which PoDoFo library target to depend on when building tools and tests")
-SET(PODOFO_DEPEND_TARGET CACHE INTERNAL
-    "Which PoDoFo library target to depend on when building tools and tests")
+SET(PODOFO_BASE_DEPEND_TARGET CACHE INTERNAL "Which PoDoFo library target to depend on when building tools and tests")
+SET(PODOFO_DEPEND_TARGET CACHE INTERNAL "Which PoDoFo library target to depend on when building tools and tests")
 
 SET(PODOFO_BASE_SOURCES
   base/PdfArray.cpp
@@ -261,7 +259,7 @@ IF(NOT PODOFO_BUILD_SHARED AND NOT PODOFO_BUILD_STATIC)
 ENDIF(NOT PODOFO_BUILD_SHARED AND NOT PODOFO_BUILD_STATIC)
 
 IF(PODOFO_BUILD_STATIC)
-    MESSAGE("Building static PoDoFo library")
+    MESSAGE("Building static PoDoFo library ${PODOFO_BASE_SOURCES} ${PODOFO_DOC_SOURCES} ${PODOFO_HEADER_FILES} ${PODOFO_LIB_DEPENDS}")
     ADD_LIBRARY(podofo_static STATIC ${PODOFO_BASE_SOURCES} ${PODOFO_DOC_SOURCES} ${PODOFO_HEADER_FILES} ${PODOFO_LIB_DEPENDS})
     #TARGET_LINK_LIBRARIES(podofo_static ${PODOFO_LIB_DEPENDS})
     SET_TARGET_PROPERTIES(podofo_static PROPERTIES
@@ -282,7 +280,7 @@ IF(PODOFO_BUILD_STATIC)
 ENDIF(PODOFO_BUILD_STATIC)
 
 IF(PODOFO_BUILD_SHARED)
-    MESSAGE("Building shared PoDoFo library")
+    MESSAGE("Building shared PoDoFo library ${PODOFO_BASE_SOURCES} ${PODOFO_DOC_SOURCES} ${PODOFO_HEADER_FILES} ${PODOFO_LIB_DEPENDS}")
     ADD_LIBRARY(podofo_shared SHARED ${PODOFO_BASE_SOURCES} ${PODOFO_DOC_SOURCES} ${PODOFO_HEADER_FILES} ${PODOFO_LIB_DEPENDS})
     #TARGET_LINK_LIBRARIES(podofo_shared ${PODOFO_LIB_DEPENDS})
     # TODO: set /wd4251 flag if we're doing a debug build with

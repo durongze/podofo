@@ -104,16 +104,12 @@ SET(PODOFO_DOC_SOURCES
  ../../src/podofo/doc/PdfXObject.cpp
   )
   
-message(STATUS "===========================================")
-message(STATUS "${PODOFO_CFLAGS}")
-message(STATUS "${PODOFO_BASE_SOURCES} ${PODOFO_DOC_SOURCES} ${PODOFO_HEADER_FILES} ")
-message(STATUS "-------------------------------------------")
 ADD_EXECUTABLE(helloworld helloworld.cpp  ${PODOFO_BASE_SOURCES} ${PODOFO_DOC_SOURCES} ${PODOFO_HEADER_FILES} tinystr.cpp tinyxml.cpp tinyxmlerror.cpp tinyxmlparser.cpp )
 
 SET_TARGET_PROPERTIES(helloworld PROPERTIES
-VERSION "${PODOFO_LIBVERSION}"
-SOVERSION "${PODOFO_SOVERSION}"
-COMPILE_FLAGS " -DBUILDING_PODOFO -DPODOFO_API -g -lz -lcrypto -lssl -lpthread -lfreetype -lpng"
+	VERSION "${PODOFO_LIBVERSION}"
+	SOVERSION "${PODOFO_SOVERSION}"
+	COMPILE_FLAGS " -DBUILDING_PODOFO -DPODOFO_API -g -lz -lcrypto -lssl -lpthread -lfreetype -lpng"
 )
 
 TARGET_LINK_LIBRARIES(helloworld ${PODOFO_LIB} "-lz -lcrypto -lssl -lpthread -lfreetype -lpng")
