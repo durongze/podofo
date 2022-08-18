@@ -269,8 +269,7 @@ IF(PODOFO_BUILD_STATIC)
         OUTPUT_NAME "podofo"
         COMPILE_FLAGS "-DBUILDING_PODOFO"
         )
-    SET(PODOFO_DEPEND_TARGET podofo_static
-        CACHE INTERNAL "Which PoDoFo library variant to depend on")
+    SET(PODOFO_DEPEND_TARGET podofo_static CACHE INTERNAL "Which PoDoFo library variant to depend on")
     SET(USING_SHARED_PODOFO FALSE)
     INSTALL(TARGETS podofo_static
         RUNTIME DESTINATION "bin"
@@ -295,8 +294,7 @@ IF(PODOFO_BUILD_SHARED)
         )
     # Since we're building a shared podofo, prefer to depend on this one for
     # tests and tools over the static library (if built).
-    SET(PODOFO_DEPEND_TARGET podofo_shared
-        CACHE INTERNAL "Which PoDoFo library variant to depend on")
+    SET(PODOFO_DEPEND_TARGET podofo_shared CACHE INTERNAL "Which PoDoFo library variant to depend on")
     SET(USING_SHARED_PODOFO TRUE)
     INSTALL(TARGETS podofo_shared
         RUNTIME DESTINATION "bin"

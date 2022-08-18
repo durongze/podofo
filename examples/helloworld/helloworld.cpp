@@ -1194,6 +1194,10 @@ void Useage(std::string exec)
 
 int AddBookMarkMain(const std::string &fileName, size_t startPage)
 {
+	if (CheckFile(fileName)) {
+		Useage("app");
+		return -1;
+	}
     XmlMain(fileName, startPage-1);
     // SetConsoleOutputCP(CP_UTF8);
     // SetConsoleOutputCP(CP_ACP);

@@ -11,4 +11,4 @@ endif()
 include_directories(${${LIBNAME}_DIR}/include ${${LIBNAME}_DIR}/ ${CMAKE_BINARY_DIR}/thirdparty/${LIBNAME})
 
 set(LUA_LIBRARY lua)
-set(LUA_LIBRARIES $<TARGET_OBJECTS:lua>)
+set(LUA_LIBRARIES $<TARGET_OBJECTS:lua_static>)

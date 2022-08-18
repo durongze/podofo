@@ -10,5 +10,5 @@ endif()
 
 include_directories(${${LIBNAME}_DIR}/include ${${LIBNAME}_DIR}/ ${CMAKE_BINARY_DIR}/thirdparty/${LIBNAME})
 
-set(HARFBUZZ_LIBRARY harfbuzz)
-set(HARFBUZZ_LIBRARIES $<TARGET_OBJECTS:harfbuzz>)
+set(HARFBUZZ_LIBRARY $<TARGET_OBJECTS:harfbuzz> $<TARGET_OBJECTS:harfbuzz-subset>)
+set(HARFBUZZ_LIBRARIES $<TARGET_OBJECTS:harfbuzz> $<TARGET_OBJECTS:harfbuzz-subset>)

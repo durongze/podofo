@@ -33,8 +33,8 @@ endif()
 include(cmake/dep_zlib.cmake)
 include(cmake/dep_jpeg.cmake)
 include(cmake/dep_png.cmake)
-include(cmake/dep_harfbuzz.cmake)
 include(cmake/dep_freetype.cmake)
+include(cmake/dep_harfbuzz.cmake)
 include(cmake/dep_lua.cmake)
 #include(cmake/dep_tiff.cmake)
 
@@ -43,6 +43,7 @@ CMAKE_POLICY(SET CMP0033 NEW) # https://cmake.org/cmake/help/v3.0/policy/CMP0033
 endif()
 
 SET(PODOFO_MAIN_CMAKELISTS_READ TRUE)
+SET(PODOFO_BUILD_STATIC TRUE)
 IF(NOT DEFINED PODOFO_BUILD_SHARED AND NOT DEFINED PODOFO_BUILD_STATIC)
     IF(WIN32)
         SET(PODOFO_BUILD_STATIC FALSE)
@@ -267,13 +268,17 @@ message("PODOFO_LIB_DEPENDS:${PODOFO_LIB_DEPENDS}")
 IF(WIN32 OR PODOFO_BUILD_STATIC)
   SET(PODOFO_LIB
       podofo
-     # ${PODOFO_LIB_DEPENDS}
+      #${PODOFO_LIB_DEPENDS}
       )
 ELSE(WIN32 OR PODOFO_BUILD_STATIC)
   SET(PODOFO_LIB podofo
       ${stlport_libraries_if_use_stlport}
       )
 ENDIF(WIN32 OR PODOFO_BUILD_STATIC)
+
+IF(WIN32)
+  SET(PODOFO_LIB ${PODOFO_LIB} ws2_32)
+ENDIF(WIN32)
 
 #
 # Setup directories we will need
@@ -304,3 +309,6 @@ ENDIF(PODOFO_BUILD_SHARED)
 IF(PODOFO_BUILD_STATIC)
   EXPORT(TARGETS podofo_static FILE "${CMAKE_CURRENT_BINARY_DIR}/PoDoFoConfig.cmake")
 ENDIF(PODOFO_BUILD_STATIC)
+IF( WIN32 )
+    SET ( CMAKE_SHARED_LINKER_FLAGS /MANIFEST:NO )
+ENDIF( WIN32 )

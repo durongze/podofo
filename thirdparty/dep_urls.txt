@@ -1,4 +1,4 @@
-ftp://209.51.188.20/gnu/libidn/libidn2-2.3.3.tar.gz
+urls="ftp://209.51.188.20/gnu/libidn/libidn2-2.3.3.tar.gz
 http://www.ijg.org/files/jpegsr9e.zip
 http://download.osgeo.org/libtiff/tiff-4.4.0rc1.zip
 https://ftp.gnu.org/gnu/libunistring/libunistring-1.0.tar.gz
@@ -9,3 +9,12 @@ https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.14.0.tar.gz
 https://udomain.dl.sourceforge.net/project/stlport/STLport/STLport%205.1.5/STLport-5.1.5.zip
 https://udomain.dl.sourceforge.net/project/cppunit/cppunit/1.12.1/cppunit-1.12.1.tar.gz
 https://udomain.dl.sourceforge.net/project/libpng/libpng16/1.6.37/lpng1637.zip
+https://udomain.dl.sourceforge.net/project/libpng/libpng16/1.6.37/libpng-1.6.37.tar.gz
+https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/refs/tags/5.1.0
+https://codeload.github.com/libjpeg-turbo/libjpeg-turbo/tar.gz/refs/tags/2.1.4"
+
+for url in $urls
+do
+	echo $url
+	wget $url
+done
