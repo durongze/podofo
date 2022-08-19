@@ -847,6 +847,7 @@ int MergeLastWord(std::vector<std::string> & line)
 		if (1 == idx) {
 			*iterWord += tail;
 			line.pop_back();
+			break;
 		}
 	}
 	return 0;
