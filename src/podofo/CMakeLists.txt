@@ -113,58 +113,58 @@ SET(PODOFO_HEADERS
   podofo.h)
 
 SET(PODOFO_BASE_HEADERS
-   ${PoDoFo_BINARY_DIR}/podofo_config.h
-   base/Pdf3rdPtyForwardDecl.h
-   base/PdfArray.h
-   base/PdfCanvas.h
-   base/PdfColor.h
-   base/PdfCompilerCompat.h
-   base/PdfCompilerCompatPrivate.h
-   base/PdfContentsTokenizer.h
-   base/PdfData.h
-   base/PdfDataType.h
-   base/PdfOwnedDataType.h
-   base/PdfDate.h
-   base/PdfDefines.h
-   base/PdfDefinesPrivate.h
-   base/PdfDictionary.h
-   base/PdfEncoding.h
-   base/PdfEncodingFactory.h
-   base/PdfEncrypt.h
-   base/PdfExtension.h
-   base/PdfError.h
-   base/PdfFileStream.h
-   base/PdfFilter.h
-   base/PdfFiltersPrivate.h
-   base/PdfImmediateWriter.h
-   base/PdfInputDevice.h
-   base/PdfInputStream.h
-   base/PdfLocale.h
-   base/PdfMemStream.h
-   base/PdfMemoryManagement.h
-   base/PdfName.h
-   base/PdfObject.h
-   base/PdfObjectStreamParserObject.h
-   base/PdfOutputDevice.h
-   base/PdfOutputStream.h
-   base/PdfParser.h
-   base/PdfParserObject.h
-   base/PdfRect.h
-   base/PdfRefCountedBuffer.h
-   base/PdfRefCountedInputDevice.h
-   base/PdfReference.h
-   base/PdfStream.h
-   base/PdfString.h
-   base/PdfTokenizer.h
-   base/PdfVariant.h
-   base/PdfVecObjects.h
-   base/PdfVersion.h
-   base/PdfWriter.h
-   base/PdfXRef.h
-   base/PdfXRefStream.h
-   base/PdfXRefStreamParserObject.h
-   base/podofoapi.h
-   )
+    ${PoDoFo_BINARY_DIR}/podofo_config.h
+    base/Pdf3rdPtyForwardDecl.h
+    base/PdfArray.h
+    base/PdfCanvas.h
+    base/PdfColor.h
+    base/PdfCompilerCompat.h
+    base/PdfCompilerCompatPrivate.h
+    base/PdfContentsTokenizer.h
+    base/PdfData.h
+    base/PdfDataType.h
+    base/PdfOwnedDataType.h
+    base/PdfDate.h
+    base/PdfDefines.h
+    base/PdfDefinesPrivate.h
+    base/PdfDictionary.h
+    base/PdfEncoding.h
+    base/PdfEncodingFactory.h
+    base/PdfEncrypt.h
+    base/PdfExtension.h
+    base/PdfError.h
+    base/PdfFileStream.h
+    base/PdfFilter.h
+    base/PdfFiltersPrivate.h
+    base/PdfImmediateWriter.h
+    base/PdfInputDevice.h
+    base/PdfInputStream.h
+    base/PdfLocale.h
+    base/PdfMemStream.h
+    base/PdfMemoryManagement.h
+    base/PdfName.h
+    base/PdfObject.h
+    base/PdfObjectStreamParserObject.h
+    base/PdfOutputDevice.h
+    base/PdfOutputStream.h
+    base/PdfParser.h
+    base/PdfParserObject.h
+    base/PdfRect.h
+    base/PdfRefCountedBuffer.h
+    base/PdfRefCountedInputDevice.h
+    base/PdfReference.h
+    base/PdfStream.h
+    base/PdfString.h
+    base/PdfTokenizer.h
+    base/PdfVariant.h
+    base/PdfVecObjects.h
+    base/PdfVersion.h
+    base/PdfWriter.h
+    base/PdfXRef.h
+    base/PdfXRefStream.h
+    base/PdfXRefStreamParserObject.h
+    base/podofoapi.h
+  )
 
 SET(PODOFO_BASE_HEADERS2 
     base/util/PdfMutex.h
@@ -172,7 +172,7 @@ SET(PODOFO_BASE_HEADERS2
     base/util/PdfMutexImpl_win32.h
     base/util/PdfMutexImpl_pthread.h
     base/util/PdfMutexWrapper.h
-    )
+  )
 
 SET(PODOFO_DOC_HEADERS
   doc/PdfAcroForm.h
@@ -310,13 +310,8 @@ IF(PODOFO_BUILD_SHARED)
       FIND_PROGRAM(PKG_CONFIG_FOUND pkg-config)
       IF(PKG_CONFIG_FOUND)
         MESSAGE("Pkg-config found, creating a pkg-config file for linking against shared library.")
-        CONFIGURE_FILE(
-          "libpodofo.pc.in"
-          "${PoDoFo_BINARY_DIR}/libpodofo.pc"
-          @ONLY)
-        INSTALL(
-          FILES "${PoDoFo_BINARY_DIR}/libpodofo.pc"
-          DESTINATION "${LIBDIRNAME}/pkgconfig")
+        CONFIGURE_FILE("libpodofo.pc.in"  "${PoDoFo_BINARY_DIR}/libpodofo.pc"  @ONLY)
+        INSTALL(FILES "${PoDoFo_BINARY_DIR}/libpodofo.pc" DESTINATION "${LIBDIRNAME}/pkgconfig")
       ELSE(PKG_CONFIG_FOUND)
         MESSAGE("Pkg-config not found. No pkg-config file will be created.")
       ENDIF(PKG_CONFIG_FOUND)
