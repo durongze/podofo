@@ -1,0 +1,36 @@
+cmake_minimum_required(VERSION 3.14)
+project (sqlite VERSION 0.1.0)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu99 -O2 -Wall -Wextra ")
+
+file(GLOB_RECURSE SQLITE_SRCS_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.c)
+#list(REMOVE_ITEM SQLITE_SRCS_LIST )
+
+add_library(SQLITE_static STATIC ${SQLITE_SRCS_LIST})
+add_library(SQLITE_shared SHARED ${SQLITE_SRCS_LIST})
+
+set_target_properties(SQLITE_shared PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/sqlite3.h)
+
+SET_TARGET_PROPERTIES(SQLITE_static PROPERTIES
+    CLEAN_DIRECT_OUTPUT 1
+    OUTPUT_NAME "libsqlite"
+    )
+SET_TARGET_PROPERTIES(SQLITE_shared PROPERTIES
+    CLEAN_DIRECT_OUTPUT 1
+    OUTPUT_NAME "libsqlite"
+    )
+
+add_executable(sqlite3 ${SQLITE_SRCS_LIST} "shell.c")
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    target_link_libraries(sqlite3 PRIVATE m dl pthread)
+endif()
+
+SET(install_targets SQLITE_static SQLITE_shared)
+
+INSTALL(TARGETS ${install_targets}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        PUBLIC_HEADER DESTINATION include
+       )
