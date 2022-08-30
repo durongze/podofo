@@ -6,15 +6,34 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu99 -O2 -Wall -Wextra -DLUA_COMPA
 file(GLOB_RECURSE LUA_SRCS_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 list(REMOVE_ITEM LUA_SRCS_LIST src/lua.c src/luac.c )
 
-add_library(liblua STATIC ${LUA_SRCS_LIST})
+add_library(lua_static STATIC ${LUA_SRCS_LIST})
+add_library(lua_shared SHARED ${LUA_SRCS_LIST})
+
+set_target_properties(lua_shared PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/src/lapi.h)
+
+SET_TARGET_PROPERTIES(lua_static PROPERTIES
+    CLEAN_DIRECT_OUTPUT 1
+    OUTPUT_NAME "liblua"
+    )
+SET_TARGET_PROPERTIES(lua_shared PROPERTIES
+    CLEAN_DIRECT_OUTPUT 1
+    OUTPUT_NAME "liblua"
+    )
 
 add_executable(lua ${LUA_SRCS_LIST} "src/lua.c")
 add_executable(luac ${LUA_SRCS_LIST} "src/luac.c")
 
-IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
-	target_link_libraries(lua PRIVATE m dl)
-	target_link_libraries(luac PRIVATE m dl)
-ELSEIF(CMAKE_SYSTEM_NAME MATCHES "Windows")
-	message("target_link_libraries(lua PRIVATE m dl)")
-	message("target_link_libraries(luac PRIVATE m dl)")
-ENDIF()
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    target_link_libraries(lua PRIVATE m dl)
+    target_link_libraries(luac PRIVATE m dl)
+endif()
+
+SET(install_targets lua luac lua_static lua_shared)
+
+INSTALL(TARGETS ${install_targets}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+	PUBLIC_HEADER DESTINATION include
+       )
+
