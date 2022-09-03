@@ -12,15 +12,18 @@ file(GLOB_RECURSE _RD_SRC_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ./rd*.c ./cd
 # jdcolor.lo jddctmgr.lo jdhuff.lo jdinput.lo jdmainct.lo jdmarker.lo jdmaster.lo jdmerge.lo
 # jdpostct.lo jdsample.lo jdtrans.lo jerror.lo jfdctflt.lo jfdctfst.lo jfdctint.lo jidctflt.lo jidctfst.lo
 # jidctint.lo jquant1.lo jquant2.lo jutils.lo jmemmgr.lo jmemnobs.lo
-file(GLOB_RECURSE _J_SRC_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "./j*.c" )         
+file(GLOB_RECURSE _J_SRC_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "./j*.c")
 
 configure_file(jconfig.txt jconfig.h)
 
 IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    list(REMOVE_ITEM _RD_SRC_LIST rdjpgcom.c)
 	list(REMOVE_ITEM _J_SRC_LIST jmemdos.c jmemmac.c)
 ELSEIF(CMAKE_SYSTEM_NAME MATCHES "Windows")
-	list(REMOVE_ITEM _J_SRC_LIST jmemansi.c jmemdos.c jmemmac.c)
+	list(REMOVE_ITEM _RD_SRC_LIST rdjpgcom.c)
+	list(REMOVE_ITEM _J_SRC_LIST jmemansi.c jmemdos.c jmemmac.c jmemnobs.c)
 	message("CMAKE_SYSTEM_NAME:${CMAKE_SYSTEM_NAME}")
+	set(CMAKE_C_FLAGS " -D_CRT_SECURE_NO_WARNINGS ")
 ENDIF()
 
 message("CMAKE_SYSTEM_NAME:${CMAKE_SYSTEM_NAME}")
@@ -28,13 +31,21 @@ message("CMAKE_SYSTEM_NAME:${CMAKE_SYSTEM_NAME}")
 message("_RD_SRC_LIST:${_RD_SRC_LIST}")
 message("_J_SRC_LIST:${_J_SRC_LIST}")
 
+set(LIBJPEG_SRC_LIST ${_RD_SRC_LIST} ${_J_SRC_LIST}  transupp.c )
+
 # CCLD     libjpeg.la
-add_library(libjpeg STATIC ${_RD_SRC_LIST} ${_J_SRC_LIST})
+add_library(libjpeg_static STATIC ${LIBJPEG_SRC_LIST})
+set_target_properties(libjpeg_static PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/jpeglib.h)
+set_target_properties(libjpeg_static PROPERTIES CLEAN_DIRECT_OUTPUT 1 OUTPUT_NAME "libjpeg")
+
+add_library(libjpeg_shared SHARED ${LIBJPEG_SRC_LIST})
+set_target_properties(libjpeg_shared PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/jpeglib.h)
+set_target_properties(libjpeg_shared PROPERTIES CLEAN_DIRECT_OUTPUT 1 OUTPUT_NAME "libjpeg")
 
 # CCLD     cjpeg
 file(GLOB _CJPEG_SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/cjpeg.c)
 add_executable(cjpeg ${_CJPEG_SRC_LIST})
-target_link_libraries(cjpeg PUBLIC libjpeg)
+target_link_libraries(cjpeg PUBLIC libjpeg_static)
 
 # CCLD     djpeg
 file(GLOB _DJPEG_SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/djpeg.c
@@ -45,20 +56,28 @@ file(GLOB _DJPEG_SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/djpeg.c
   ${CMAKE_CURRENT_SOURCE_DIR}/wrbmp.c
   ${CMAKE_CURRENT_SOURCE_DIR}/rdcolmap.c)
 add_executable(djpeg ${_DJPEG_SRC_LIST})
-target_link_libraries(djpeg PUBLIC libjpeg)
+target_link_libraries(djpeg PUBLIC libjpeg_static)
 
 # CCLD     jpegtran
 file(GLOB _JPEG_TRAN_SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/jpegtran.c ${CMAKE_CURRENT_SOURCE_DIR}/transupp.c)
 add_executable(jpegtran ${_JPEG_TRAN_SRC_LIST})
-target_link_libraries(jpegtran PUBLIC libjpeg)
+target_link_libraries(jpegtran PUBLIC libjpeg_static)
 
 # CCLD     rdjpgcom
 file(GLOB _RDJPEG_SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/rdjpgcom.c)
 add_executable(rdjpgcom ${_RDJPEG_SRC_LIST})
-target_link_libraries(rdjpgcom PUBLIC libjpeg)
+target_link_libraries(rdjpgcom PUBLIC libjpeg_static)
 
 # CCLD     wrjpgcom
 file(GLOB _WRJPEG_SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/wrjpgcom.c)
 add_executable(wrjpgcom ${_WRJPEG_SRC_LIST})
-target_link_libraries(wrjpgcom PUBLIC libjpeg)
+target_link_libraries(wrjpgcom PUBLIC libjpeg_static)
 
+SET(install_targets wrjpgcom rdjpgcom jpegtran djpeg cjpeg libjpeg_static libjpeg_shared )
+
+INSTALL(TARGETS ${install_targets}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        PUBLIC_HEADER DESTINATION include
+       )
