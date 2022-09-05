@@ -154,7 +154,7 @@ goto :eof
     if not exist %zip_file% (
         echo %zip_file% does not exist!
     )
-    unzip -q -o %zip_file%
+    @rem unzip -q -o %zip_file%
     if %Spec% == "" (
         call :auto_install %FileDir% %DstDir% %CurFlags%
     ) else (
@@ -177,7 +177,7 @@ goto :eof
     if not exist %tar_file% (
         echo %tar_file% does not exist!
     )
-    tar -xf %tar_file%
+    @rem tar -xf %tar_file%
     if %Spec% == "" (
         call :auto_install %FileDir% %DstDir% %CurFlags%
     ) else (
@@ -407,6 +407,26 @@ goto :eof
         call :tar_file_install  !package_name!  !home_dir!  "-DCMAKE_BUILD_TYPE=%build_type%"  ""
     ) else if "%ext_name%" == "xz" (
         call :tar_file_install  !package_name!  !home_dir!  "-DCMAKE_BUILD_TYPE=%build_type%"  ""
+    ) else (
+        echo "%ext_name%"
+    )
+    endlocal
+goto :eof
+
+:uncompress_package
+    setlocal ENABLEDELAYEDEXPANSION
+    set package_name=%1
+
+    call :color_text 2f "++++++++++++++uncompress_package++++++++++++++"
+    echo %package_name% 
+    call :get_suf_sub_str !package_name! . ext_name
+    echo ext_name:!ext_name!
+    if "%ext_name%" == "zip" (
+        unzip -q -o   !package_name!  
+    ) else if "%ext_name%" == "gz" (
+        tar -xf       !package_name!  
+    ) else if "%ext_name%" == "xz" (
+        tar -xf       !package_name!  
     ) else (
         echo "%ext_name%"
     )

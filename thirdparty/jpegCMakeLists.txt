@@ -33,6 +33,8 @@ message("_J_SRC_LIST:${_J_SRC_LIST}")
 
 set(LIBJPEG_SRC_LIST ${_RD_SRC_LIST} ${_J_SRC_LIST}  transupp.c )
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 # CCLD     libjpeg.la
 add_library(libjpeg_static STATIC ${LIBJPEG_SRC_LIST})
 set_target_properties(libjpeg_static PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/jpeglib.h)

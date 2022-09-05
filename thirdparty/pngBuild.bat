@@ -34,17 +34,37 @@ set CMAKE_LIBRARY_PATH=%lib%;
 
 @rem call %auto_install_func% install_all_package "%tools_addr%" "%tools_dir%"
 @rem call %auto_install_func% install_all_package "%software_urls%" "%software_dir%"
-call :png_install "%software_dir%" %home_dir%
+call :pkg_install "%software_dir%" %home_dir%
 goto :eof
 
 @rem objdump -S E:\program\zlib-1.2.12\lib\zlib.lib | grep -C 5 "lzma_auto_decoder"
+:pkg_fix
+    setlocal ENABLEDELAYEDEXPANSION
+    set pkg_dir=%1
+    copy jpegCMakeLists.txt %pkg_dir%\jpeg-9e\CMakeLists.txt
+    endlocal
+goto :eof
 
-:png_install
-    set tools_dir=%software_dir%
+:pkg_uncompress
+    setlocal ENABLEDELAYEDEXPANSION
+    set pkg_dir=%1
+    pushd %pkg_dir%
+    for /f %%i in ( 'dir /b *.zip *.tar.*' ) do (
+        set pkg_file=%%i
+        call %auto_install_func% uncompress_package  !pkg_file! 
+    )
+    popd
+    endlocal
+goto :eof
+
+:pkg_install
+    set pkg_dir=%1
     set home_dir=%2
-    pushd %tools_dir%
+    call :pkg_uncompress %pkg_dir%
+    call :pkg_fix %pkg_dir%
+    pushd %pkg_dir%
         call %auto_install_func% install_package zlib-1.2.12.tar.gz "%home_dir%"
         call %auto_install_func% install_package lpng1637.zip       "%home_dir%"
-        @rem call %auto_install_func% install_package jpeg-9e.zip       "%home_dir%"
+        call %auto_install_func% install_package jpeg-9e.zip       "%home_dir%"
     popd
 goto :eof
