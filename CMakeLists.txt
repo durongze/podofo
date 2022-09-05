@@ -31,8 +31,8 @@ CMAKE_POLICY(SET CMP0075 NEW) # https://cmake.org/cmake/help/v3.0/policy/CMP0075
 endif()
 
 include(cmake/dep_zlib.cmake)
-include(cmake/dep_jpeg.cmake)
 include(cmake/dep_png.cmake)
+include(cmake/dep_jpeg.cmake)
 include(cmake/dep_freetype.cmake)
 include(cmake/dep_harfbuzz.cmake)
 include(cmake/dep_lua.cmake)
