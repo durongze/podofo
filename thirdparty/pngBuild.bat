@@ -41,7 +41,9 @@ goto :eof
 :pkg_fix
     setlocal ENABLEDELAYEDEXPANSION
     set pkg_dir=%1
-    copy jpegCMakeLists.txt %pkg_dir%\jpeg-9e\CMakeLists.txt
+    copy jpegCMakeLists.txt        %pkg_dir%\jpeg-9e\CMakeLists.txt
+    sed  "s#add_definitions(-wd4244#add_definitions(/bigobj -wd4244#g"  -i  %pkg_dir%\harfbuzz-5.1.0\CMakeLists.txt
+    copy luaCMakeLists.txt    %pkg_dir%\lua-5.4.4\CMakeLists.txt
     endlocal
 goto :eof
 
@@ -65,6 +67,10 @@ goto :eof
     pushd %pkg_dir%
         call %auto_install_func% install_package zlib-1.2.12.tar.gz "%home_dir%"
         call %auto_install_func% install_package lpng1637.zip       "%home_dir%"
-        call %auto_install_func% install_package jpeg-9e.zip       "%home_dir%"
+        call %auto_install_func% install_package jpeg-9e.zip        "%home_dir%"
+        call %auto_install_func% install_package freetype-2.12.1.tar.gz "%home_dir%"
+        call %auto_install_func% install_package harfbuzz-5.1.0.zip     "%home_dir%"
+        call %auto_install_func% install_package lua-5.4.4.tar.gz       "%home_dir%"
+        call %auto_install_func% install_package tiff-4.4.0.zip         "%home_dir%"
     popd
 goto :eof
