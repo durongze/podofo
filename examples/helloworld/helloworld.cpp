@@ -38,10 +38,11 @@
 #include <regex>
 #ifdef __linux
 	#include <unistd.h>
-    #define __TEXT(x)  x
-// #elif __WIN32
-	// #define __TEXT(x)  x
+    #define MY_TEXT(x)  x
+#else
+	#define MY_TEXT 
 #endif
+
 /*
  * All podofo classes are member of the PoDoFo namespace.
  */
@@ -210,7 +211,7 @@ inline wchar_t* AnsiToUnicode(const char* szStr)
 {
 	wchar_t* pResult = NULL;
 	int nLen = 0;
-#ifdef WIN32
+#ifdef MB_X_WC
 	nLen = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, NULL, 0);
 	if (nLen == 0)
 	{
@@ -231,7 +232,7 @@ inline char* UnicodeToAnsi(const wchar_t* szStr)
 {
 	int nLen = 0;
 	char* pResult = NULL;
-#ifdef WIN32
+#ifdef MB_X_WC
 	nLen = WideCharToMultiByte(CP_ACP, 0, szStr, -1, NULL, 0, NULL, NULL);
 	if (nLen == 0)
 	{
@@ -741,21 +742,21 @@ public:
 	}
 	bool MatchChapter(std::string chapter)
 	{
-        std::string pattern(__TEXT("^\\s*Chapter\\s*\\d*|^\\s*第.*章|^\\s*\\d{1,}[^\\.\\d].*|^\\s*\\d{1,}\\.[^\\d].*"));
+        std::string pattern(MY_TEXT("^\\s*Unit.*|^\\s*Chapter\\s*\\d*|^\\s*第.*章|^\\s*\\d{1,}[^\\.\\d].*|^\\s*\\d{1,}\\.[^\\d].*"));
         m_chapter=(pattern);
 		return std::regex_search(chapter, m_chapter);
 	}
 
 	int MatchSection(std::string section)
 	{
-        std::string pattern(__TEXT("^\\s*第.*节|^\\s*\\d{1,}\\.\\d{1,3}[^\\.\\d].*|^\\s*\\d{1,}\\.\\d{1,}\\.\\D.*"));
+        std::string pattern(MY_TEXT("^\\s*第.*节|^\\s*\\d{1,}\\.\\d{1,3}[^\\.\\d].*|^\\s*\\d{1,}\\.\\d{1,}\\.\\D.*"));
         m_section = (pattern);
         return std::regex_search(section, m_section);
 	}
 
 	int MatchLesson(std::string lesson)
 	{
-        std::string pattern("^\\s*\\d{1,}\\.\\d{1,}\\.\\d{1,}[^\\.\\d].*|^\\s*\\d{1,}\\.\\d{1,}\\.\\d{1,}\\.\\D.*");
+        std::string pattern("^\\s*lesson.*|^\\s*\\d{1,}\\.\\d{1,}\\.\\d{1,}[^\\.\\d].*|^\\s*\\d{1,}\\.\\d{1,}\\.\\d{1,}\\.\\D.*");
 		m_lesson = (pattern);
         return std::regex_search(lesson, m_lesson);
 	}
@@ -869,7 +870,7 @@ int SplitPageNoFromTxt(const std::string &file)
         }
         for (auto iterCh = iterWord->crbegin(); iterCh != iterWord->crend(); ++iterCh) {
             if ((*iterCh) < '0' || (*iterCh) > '9') {
-                iterWord->insert(iterCh.base(), 8, __TEXT(' '));
+                iterWord->insert(iterCh.base(), 8, MY_TEXT(' '));
                 break;
             }
         }
@@ -1209,14 +1210,29 @@ int AddBookMarkMain(const std::string &fileName, size_t startPage)
     return 0;
 }
 
+std::string GetFileName(const std::string& fileName)
+{
+    std::string extName = ".pdf";
+    size_t lenFileName = fileName.length();
+    size_t lenExtName = extName.length();
+    return fileName.substr(0, lenFileName - lenExtName);
+}
+
 int AppMain(int argc, char* argv[])
 {
-    if (argc != 3 || CheckFile(argv[1]))
+    std::string fileName;
+    if (argc != 3)
     {
         Useage(argv[0]);
         return -1;
     }
-    return AddBookMarkMain(argv[1], atoi(argv[2]));
+    fileName = GetFileName(std::string(argv[1]));
+    if (CheckFile(fileName))
+    {
+        Useage(argv[0]);
+        return -2;
+    }
+    return AddBookMarkMain(fileName, atoi(argv[2]));
 }
 
 int main( int argc, char* argv[] )
@@ -1224,7 +1240,7 @@ int main( int argc, char* argv[] )
 #ifdef __linux
 	return AppMain(argc, argv);
 #else
-    std::string file_name = __TEXT("android");
+    std::string file_name = MY_TEXT("android");
     SplitPageNoFromTxt(file_name);
     return AddBookMarkMain(file_name, 15);
 #endif

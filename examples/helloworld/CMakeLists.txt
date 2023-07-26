@@ -9,7 +9,12 @@
 # Note that you don't need the headers for PoDoFo's dependencies in your
 # header search path.
 
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
+
 ADD_EXECUTABLE(helloworld helloworld.cpp tinystr.cpp tinyxml.cpp tinyxmlerror.cpp tinyxmlparser.cpp )
+
+target_compile_definitions(helloworld PRIVATE UNICODE;_UNICODE) 
 
 SET_TARGET_PROPERTIES(helloworld PROPERTIES
 	VERSION "${PODOFO_LIBVERSION}"
