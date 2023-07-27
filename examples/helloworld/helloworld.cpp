@@ -521,9 +521,18 @@ int AddBookMark(PdfMemDocument &docFirst, const char* bm)
 
 int AddBookMark(std::string fileName)
 {
+    std::string magic_pdf = "magic_mind.pdf";
     PdfMemDocument docFirst((fileName + "_bm.pdf").c_str());
     AddBookMark(docFirst, (fileName + ".xml").c_str());
-    docFirst.Write((fileName + ".pdf").c_str());
+    docFirst.Write(magic_pdf.c_str());
+    if (std::remove((fileName + ".pdf").c_str())) {
+        std::cout << "remove: " << strerror(errno) << std::endl;
+        return 1;
+    }
+    if (std::rename(magic_pdf.c_str(), (fileName + ".pdf").c_str())) {
+        std::cout << "rename: " << strerror(errno) << std::endl;
+        return 2;
+    }
     return 0;
 }
 
@@ -946,9 +955,6 @@ int IsPageNo(const std::string &pageNo)
 
 int XmlMain(std::string fname, int pageoffset)
 {
-#ifdef WIN32
-	SetConsoleOutputCP(CP_WINUNICODE);
-#endif
     InitXmlDoc((fname + ".xml").c_str());
 	int idx = 0;
 	int type = 0;
@@ -1174,14 +1180,14 @@ int CheckFile(std::string fileName)
 
     FILE *fpPdf = fopen(pdfFile.c_str(), "rb");
     if (fpPdf == NULL) {
-		std::cout << cwdDir << pdfFile << ":" << errno << std::endl;
+		std::cout << cwdDir << pdfFile << " error:" << strerror(errno) << std::endl;
         return -2;
     } else {
         fclose(fpPdf);
     }
     FILE *fpTxt = fopen(txtFile.c_str(), "rb");
     if (fpTxt == NULL) {
-		std::cout << cwdDir << txtFile << ":" << errno << std::endl;
+		std::cout << cwdDir << txtFile << " error:" << strerror(errno) << std::endl;
         return -3;
     } else {
         fclose(fpTxt);
@@ -1200,10 +1206,13 @@ int AddBookMarkMain(const std::string &fileName, size_t startPage)
 		Useage("app");
 		return -1;
 	}
-    XmlMain(fileName, startPage-1);
-    // SetConsoleOutputCP(CP_UTF8);
+#ifdef WIN32
+    // SetConsoleOutputCP(CP_WINUNICODE);
+    SetConsoleOutputCP(CP_UTF8);
     // SetConsoleOutputCP(CP_ACP);
-    // SaveBookMark(fileName);
+#endif
+    XmlMain(fileName, startPage-1);
+    SaveBookMark(fileName);
 	SplitPageNoFromTxt(fileName);
     DelBookMark(fileName);
     AddBookMark(fileName);
@@ -1237,7 +1246,7 @@ int AppMain(int argc, char* argv[])
 
 int main( int argc, char* argv[] )
 {
-#ifdef __linux
+#ifndef __linux
 	return AppMain(argc, argv);
 #else
     std::string file_name = MY_TEXT("android");
