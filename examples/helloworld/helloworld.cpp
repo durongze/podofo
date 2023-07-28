@@ -521,18 +521,23 @@ int AddBookMark(PdfMemDocument &docFirst, const char* bm)
 
 int AddBookMark(std::string fileName)
 {
+    int ret = 0;
     std::string magic_pdf = "magic_mind.pdf";
-    PdfMemDocument docFirst((fileName + "_bm.pdf").c_str());
-    AddBookMark(docFirst, (fileName + ".xml").c_str());
-    docFirst.Write(magic_pdf.c_str());
-    if (std::remove((fileName + ".pdf").c_str())) {
-        std::cout << "remove: " << strerror(errno) << std::endl;
-        return 1;
+    {
+        PdfMemDocument docFirst((fileName + "_bm.pdf").c_str());
+        // docFirst.Write((fileName + ".pdf").c_str());
+        AddBookMark(docFirst, (fileName + ".xml").c_str());
+        // docFirst.Write(magic_pdf.c_str());
+        setlocale(LC_ALL, "");
+
+        docFirst.Write((fileName + ".pdf").c_str());
     }
-    if (std::rename(magic_pdf.c_str(), (fileName + ".pdf").c_str())) {
+    // ret = std::rename(magic_pdf.c_str(), (fileName + ".pdf").c_str());
+    if (ret != 0) {
         std::cout << "rename: " << strerror(errno) << std::endl;
         return 2;
     }
+
     return 0;
 }
 
