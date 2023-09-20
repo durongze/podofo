@@ -4,12 +4,13 @@ project (lua VERSION 0.1.0)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu99 -O2 -Wall -Wextra -DLUA_COMPAT_5_3 -DLUA_USE_LINUX")
 
 file(GLOB_RECURSE LUA_SRCS_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+file(GLOB_RECURSE LUA_HDRS ${CMAKE_SOURCE_DIR}/src/*.h)
 list(REMOVE_ITEM LUA_SRCS_LIST src/lua.c src/luac.c )
 
 add_library(lua_static STATIC ${LUA_SRCS_LIST})
 add_library(lua_shared SHARED ${LUA_SRCS_LIST})
 
-set_target_properties(lua_shared PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/src/lapi.h)
+set_target_properties(lua_shared PROPERTIES PUBLIC_HEADER "${LUA_HDRS}")
 
 SET_TARGET_PROPERTIES(lua_static PROPERTIES
     CLEAN_DIRECT_OUTPUT 1
@@ -29,11 +30,14 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 endif()
 
 SET(install_targets lua luac lua_static lua_shared)
+SET(install_hdr_dir include)
 
 INSTALL(TARGETS ${install_targets}
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-	PUBLIC_HEADER DESTINATION include
+        PUBLIC_HEADER DESTINATION ${install_hdr_dir}
        )
 
+#install(FILES ${LUA_HDRS} DESTINATION ${install_hdr_dir})
+install(DIRECTORY "inc_sub_dir" DESTINATION ${install_hdr_dir} FILES_MATCHING PATTERN "*.h")
