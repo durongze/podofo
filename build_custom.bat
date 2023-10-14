@@ -1,30 +1,41 @@
 @rem set VSCMD_DEBUG=2
-@rem %comspec% /k "E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-@rem call "E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-@rem %comspec% /k "E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-@rem call "E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-@rem call "E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-@rem call "E:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
-@rem call "E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-@rem call "F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86
+@rem %comspec% /k "F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
+set CurDir=%~dp0
+
+set ProjDir=%CurDir:~0,-1%
+echo ProjDir %ProjDir%
+
+set VisualStudioCmd="F:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
+
+set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\vcvars32.bat"
+set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64\vcvars64.bat"
+
+set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\vcvars32.bat"
+set VisualStudioCmd="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64\vcvars64.bat"
+
+set VisualStudioCmd="E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+set VisualStudioCmd="E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+
+set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+
+set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 set PATH=F:\program\cmake\bin;%PATH%
 
 set SystemBinDir=.\
-
+set BuildDir=dyzbuild
 set BuildType=Release
-set ProjDir=%cd%
-set ProjName=
+set ProjName=podofo
 
 call :get_suf_sub_str %ProjDir% \ ProjName
 
 echo ProjName %ProjName%
-set BuildDir=dyzbuild
-
+CALL %VisualStudioCmd%
 call :CompileProject %BuildDir% %BuildType% %ProjName%
-call :CopyTarget %BuildDir% %BuildType% %SystemBinDir%
-
+@rem call :CopyTarget %BuildDir% %BuildType% %SystemBinDir%
+@rem call :RunWinSvr %ProjName% %BuildDir% %BuildType% %ProjDir%\bin\x64\Debug\sshd.exe
 pause
 goto :eof
 
@@ -63,8 +74,21 @@ goto :eof
     set BuildType=%3
     set BinPath="%~4"
     @rem 
-    sc create %ProjName% binPath= %BinPath%
-    sc start %ProjName%
+    if not exist %BinPath% (
+        call :color_text 4f "++++++++++++++RunWinSvr file does not exist++++++++++++++"
+        echo BinPath %BinPath% .
+    ) else (
+        sc create %ProjName% binPath= %BinPath%
+        sc config %ProjName% start=auto
+        @rem sc start %ProjName%
+        net start %ProjName%
+        if !errorlevel! equ 0 (
+            sc stop %ProjName%
+        ) else (
+            call :color_text 4f "++++++++++++++RunWinSvr net start error ++++++++++++++"
+        )
+        @rem sc delete %ProjName%
+    )
     endlocal
 goto :eof
 
