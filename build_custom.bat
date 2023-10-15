@@ -34,7 +34,7 @@ call :get_suf_sub_str %ProjDir% \ ProjName
 echo ProjName %ProjName%
 CALL %VisualStudioCmd%
 call :CompileProject %BuildDir% %BuildType% %ProjName%
-@rem call :CopyTarget %BuildDir% %BuildType% %SystemBinDir%
+@rem call :CopyTarget "%BuildDir%" "%BuildType%" "%SystemBinDir%"
 @rem call :RunWinSvr %ProjName% %BuildDir% %BuildType% %ProjDir%\bin\x64\Debug\sshd.exe
 pause
 goto :eof
@@ -60,10 +60,19 @@ goto :eof
 
 :CopyTarget
     setlocal ENABLEDELAYEDEXPANSION
-    set BuildDir=%~1
-    set BuildType=%2
-    set SystemBinDir=%3
-    for /f %%i in ('dir /s /b "%BuildDir%\bin\%BuildType%\*.exe"') do (   copy %%i %SystemBinDir%\ )
+    set BuildDir="%~1"
+    set BuildType="%~2"
+    set SystemBinDir=%~3
+    for /f %%i in ('dir /s /b "%BuildDir%\bin\%BuildType%\*.dll"') do ( 
+        if not exist %%i (
+            call :color_text 4f "++++++++++++++CopyTarget error ++++++++++++++"
+            echo file: %%i
+        ) else (
+            call :color_text 2f "++++++++++++++CopyTarget ++++++++++++++"
+            echo copy %%i "%SystemBinDir%"
+            copy %%i "%SystemBinDir%"
+        )
+    )
     endlocal
 goto :eof
 
