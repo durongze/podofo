@@ -1,5 +1,5 @@
 if(NOT TARGET zlib)
-  set(LIBNAME zlib)
+  set(LIBNAME zlib-1.2.12)
   set(${LIBNAME}_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/${LIBNAME})
   message("${LIBNAME}_DIR:${${LIBNAME}_DIR}")
   if(CMAKE_SYSTEM_NAME MATCHES "Linux")

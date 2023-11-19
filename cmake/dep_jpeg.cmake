@@ -1,5 +1,5 @@
 if(NOT TARGET jpeg)
-  set(LIBNAME jpeg)
+  set(LIBNAME jpeg-9e)
   set(${LIBNAME}_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/${LIBNAME})
   message("${LIBNAME}_DIR:${${LIBNAME}_DIR}")
   if(CMAKE_SYSTEM_NAME MATCHES "Linux")

@@ -1,5 +1,5 @@
 if(NOT TARGET harfbuzz)
-  set(LIBNAME harfbuzz)
+  set(LIBNAME harfbuzz-5.1.0)
   set(${LIBNAME}_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/${LIBNAME})
   message("${LIBNAME}_DIR:${${LIBNAME}_DIR}")
   if(CMAKE_SYSTEM_NAME MATCHES "Linux")

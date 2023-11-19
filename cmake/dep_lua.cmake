@@ -1,5 +1,5 @@
 if(NOT TARGET lua)
-  set(LIBNAME lua)
+  set(LIBNAME lua-5.4.4)
   set(${LIBNAME}_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/${LIBNAME})
   message("${LIBNAME}_DIR:${${LIBNAME}_DIR}")
   if(CMAKE_SYSTEM_NAME MATCHES "Linux")

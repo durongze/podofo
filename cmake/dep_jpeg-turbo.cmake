@@ -1,5 +1,5 @@
 if(NOT TARGET jpeg-turbo)
-  set(LIBNAME jpeg-turbo)
+  set(LIBNAME libjpeg-turbo-2.1.4)
   set(${LIBNAME}_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/${LIBNAME})
   message("${LIBNAME}_DIR:${${LIBNAME}_DIR}")
   if(CMAKE_SYSTEM_NAME MATCHES "Linux")

@@ -1,5 +1,5 @@
 if(NOT TARGET freetype)
-  set(LIBNAME freetype)
+  set(LIBNAME freetype-2.12.1)
   set(${LIBNAME}_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/${LIBNAME})
   message("${LIBNAME}_DIR:${${LIBNAME}_DIR}")
   if(CMAKE_SYSTEM_NAME MATCHES "Linux")
