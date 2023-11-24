@@ -15,20 +15,20 @@ set VisualStudioCmd="E:\Program Files (x86)\Microsoft Visual Studio\2019\Enterpr
 set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
 set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
 
-set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+@rem set VisualStudioCmd="E:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
 
-set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
-set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+@rem set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
+@rem set VisualStudioCmd="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 set old_sys_include="%include%"
 set old_sys_lib="%lib%"
 set old_sys_path="%path%"
 
-set ProgramDir=F:\program
+set ProgramDir=E:\programs
 set PerlPath=%ProgramDir%\Perl\bin
 set NASMPath=%ProgramDir%\nasm
 set CMakePath=%ProgramDir%\cmake\bin
-set PythonHome=%ProgramDir%\python
+set PythonHome=%ProgramDir%\python\python38-32
 set PATH=%NASMPath%;%PerlPath%;%CMakePath%;%PythonHome%;%PATH%
 
 set CurDir=%~dp0
@@ -65,7 +65,8 @@ goto :eof
 
     if not exist %BuildDir% (
         mkdir %BuildDir%
-    ) else (
+    )
+    if not exist %BuildDir%\%BuildType% (
         mkdir %BuildDir%\%BuildType%\
     )
     for /f %%i in ('dir /s /b "out\windows\*.dll"') do (   copy %%i %BuildDir%\%BuildType%\ )
