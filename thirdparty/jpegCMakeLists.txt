@@ -31,23 +31,43 @@ message("CMAKE_SYSTEM_NAME:${CMAKE_SYSTEM_NAME}")
 message("_RD_SRC_LIST:${_RD_SRC_LIST}")
 message("_J_SRC_LIST:${_J_SRC_LIST}")
 
-set(LIBJPEG_SRC_LIST ${_RD_SRC_LIST} ${_J_SRC_LIST}  transupp.c )
+set(LIBJPEG_SRC_LIST  ${_RD_SRC_LIST} ${_J_SRC_LIST}  transupp.c )
+set(LIBJPEG_HDRS_LIST ${CMAKE_SOURCE_DIR}/jpeglib.h              )
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # CCLD     libjpeg.la
-add_library(libjpeg_static STATIC ${LIBJPEG_SRC_LIST})
-set_target_properties(libjpeg_static PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/jpeglib.h)
-set_target_properties(libjpeg_static PROPERTIES CLEAN_DIRECT_OUTPUT 1 OUTPUT_NAME "libjpeg")
 
-add_library(libjpeg_shared SHARED ${LIBJPEG_SRC_LIST})
-set_target_properties(libjpeg_shared PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/jpeglib.h)
-set_target_properties(libjpeg_shared PROPERTIES CLEAN_DIRECT_OUTPUT 1 OUTPUT_NAME "libjpeg")
+set(LIBJPEG_STATIC libjpeg_static)
+add_library               (${LIBJPEG_STATIC}   STATIC     ${LIBJPEG_SRC_LIST}                     )
+target_include_directories(${LIBJPEG_STATIC}   PRIVATE    ${LIBJPEG_INC_DIR}  ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${LIBJPEG_STATIC}   PRIVATE    ${LIBJPEG_SRC_DIR}  ${ZLIB_LIBRARY_DIRS})
+target_link_libraries     (${LIBJPEG_STATIC}   PRIVATE                        ${ZLIB_LIBRARIES}   )
+#target_compile_definitions(${LIBJPEG_STATIC}   PRIVATE     WIN32   _WINDOWS   _DEBUG              )
+#target_link_options       (${LIBJPEG_STATIC}   PRIVATE   "/SUBSYSTEM:WINDOWS" "/ENTRY:wWinMainCRTStartup")
+set_target_properties     (${LIBJPEG_STATIC}   PROPERTIES  CLEAN_DIRECT_OUTPUT 1    OUTPUT_NAME "libjpeg_static"  )
+set_target_properties     (${LIBJPEG_STATIC}   PROPERTIES  PUBLIC_HEADER       "${LIBJPEG_HDRS_LIST}")
+
+set(LIBJPEG_SHARED libjpeg_shared)
+add_library               (${LIBJPEG_SHARED} SHARED  ${LIBJPEG_SRC_LIST})
+target_include_directories(${LIBJPEG_SHARED} PRIVATE ${LIBJPEG_INC_DIR}   ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${LIBJPEG_SHARED} PRIVATE ${LIBJPEG_SRC_DIR}   ${ZLIB_LIBRARY_DIRS})
+target_link_libraries     (${LIBJPEG_SHARED} PRIVATE                      ${ZLIB_LIBRARIES}   ) 
+#target_compile_definitions(${LIBJPEG_SHARED} PRIVATE WIN32   _WINDOWS   _DEBUG              )
+#target_link_options       (${LIBJPEG_SHARED} PRIVATE   "/SUBSYSTEM:WINDOWS" "/ENTRY:wWinMainCRTStartup")
+set_target_properties     (${LIBJPEG_SHARED} PROPERTIES  CLEAN_DIRECT_OUTPUT 1    OUTPUT_NAME "libjpeg_shared"  )
+set_target_properties     (${LIBJPEG_SHARED} PROPERTIES  PUBLIC_HEADER       "${LIBJPEG_HDRS_LIST}")
 
 # CCLD     cjpeg
 file(GLOB _CJPEG_SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/cjpeg.c)
-add_executable(cjpeg ${_CJPEG_SRC_LIST})
-target_link_libraries(cjpeg PUBLIC libjpeg_static)
+
+set(CJPEG_APP  cjpeg)
+add_executable            (${CJPEG_APP} ${_CJPEG_SRC_LIST})
+target_include_directories(${CJPEG_APP} PRIVATE ${LIBJPEG_INC_DIR}  ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${CJPEG_APP} PRIVATE ${LIBJPEG_SRC_DIR}  ${ZLIB_LIBRARY_DIRS})
+target_link_libraries     (${CJPEG_APP} PRIVATE ${LIBJPEG_STATIC}   ${ZLIB_LIBRARIES}   )
+#target_link_options       (${CJPEG_APP} PRIVATE "/SUBSYSTEM:WINDOWS" "/ENTRY:wWinMainCRTStartup")
+#target_compile_definitions(${CJPEG_APP} PRIVATE WIN32     _WINDOWS    _DEBUG    _UNICODE     UNICODE)
 
 # CCLD     djpeg
 file(GLOB _DJPEG_SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/djpeg.c
