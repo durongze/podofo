@@ -25,6 +25,9 @@
  */
 #include <iostream>
 #include <fstream>
+#include <cctype>
+#include <math.h>
+
 /*
  * Now include all podofo header files, to have access
  * to all functions of podofo and so that you do not have
@@ -796,6 +799,17 @@ private:
 
 XmlCfg cfg;
 
+int DeletePointInLine(std::string& lineSrc)
+{
+	std::regex patternMultiPoint("\\.\\.\\.");
+	std::regex patternSinglePoint("  \\.");
+	std::string lineDst = std::regex_replace(lineSrc, patternMultiPoint, "  ");
+	lineSrc = std::regex_replace(lineDst, patternSinglePoint, " ");
+	lineDst = std::regex_replace(lineSrc, patternSinglePoint, " ");
+	lineSrc = lineDst;
+	return 0;
+}
+
 int ParseLine(const std::string& lineSrc, std::vector<std::string>& allCol)
 {
     char oper = ' ';
@@ -822,21 +836,204 @@ int ParseLine(const std::string& lineSrc, std::vector<std::string>& allCol)
 	return 0;
 }
 
+int IsDebugLine(int lineNo)
+{
+	int idx = 0;
+	int lineSet[] = { 1, 23, 42 };
+	for (idx = 0; idx < sizeof(lineSet) / sizeof(lineSet[0]); idx++)
+	{
+		if (lineSet[idx] == lineNo + 1) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+#define LEFTSTRIP 0
+#define RIGHTSTRIP 1
+#define BOTHSTRIP 2
+
+std::string do_strip(const std::string& str, int striptype, const std::string& chars)
+{
+	std::string::size_type strlen = str.size();
+	std::string::size_type charslen = chars.size();
+	std::string::size_type i, j;
+
+	//默认情况下，去除空白符
+	if (0 == charslen)
+	{
+		i = 0;
+		//去掉左边空白字符
+		if (striptype != RIGHTSTRIP)
+		{
+			while (i < strlen && ::isspace(str[i]))
+			{
+				i++;
+			}
+		}
+		j = strlen;
+		//去掉右边空白字符
+		if (striptype != LEFTSTRIP)
+		{
+			j--;
+			while (j >= i && ::isspace(str[j]))
+			{
+				j--;
+			}
+			j++;
+		}
+	}
+	else
+	{
+		//把删除序列转为c字符串
+		const char* sep = chars.c_str();
+		i = 0;
+		if (striptype != RIGHTSTRIP)
+		{
+			//memchr函数：从sep指向的内存区域的前charslen个字节查找str[i]
+			while (i < strlen && memchr(sep, str[i], charslen))
+			{
+				i++;
+			}
+		}
+		j = strlen;
+		if (striptype != LEFTSTRIP)
+		{
+			j--;
+			while (j >= i && memchr(sep, str[j], charslen))
+			{
+				j--;
+			}
+			j++;
+		}
+		//如果无需要删除的字符
+		if (0 == i && j == strlen)
+		{
+			return str;
+		}
+		else
+		{
+			return str.substr(i, j - i);
+		}
+	}
+
+}
+
+std::string strip(const std::string& str, const std::string& chars = " ")
+{
+	return do_strip(str, BOTHSTRIP, chars);
+}
+
+std::string lstrip(const std::string& str, const std::string& chars = " ")
+{
+	return do_strip(str, LEFTSTRIP, chars);
+}
+
+std::string rstrip(const std::string& str, const std::string& chars = " ")
+{
+	return do_strip(str, RIGHTSTRIP, chars);
+}
+
+int SplitPageNoFromLine(std::string& line)
+{
+	line = strip(line);
+	for (auto iterCh = line.crbegin(); iterCh != line.crend(); ++iterCh) {
+		if ((*iterCh) < '0' || (*iterCh) > '9') {
+			line.insert(iterCh.base(), 8, MY_TEXT(' '));
+			break;
+		}
+	}
+	return 0;
+}
+
 int ProcTxtToMap(const std::string &file, std::map<int, std::vector<std::string> >& allData)
 {
 	std::fstream s(file, std::fstream::in | std::fstream::out);
 	int idxRow = 0;
 	for (std::string line; std::getline(s, line); ++idxRow) {
 		std::vector<std::string> allCol;
-		if (259 == idxRow) {
+		if (IsDebugLine(idxRow)) {
 			std::cout << "idxRow:" << idxRow << std::endl;
 		}
+		DeletePointInLine(line);
+		SplitPageNoFromLine(line);
 		ParseLine(line, allCol);
 		if (allCol.size() != 0) {
 			allData[idxRow] = allCol;
 		}
 		else {
 			--idxRow;
+		}
+	}
+	return 0;
+}
+
+int FixPageNumInMap(std::map<int, std::vector<std::string> >& allData, int startIdx, int endIdx, int startPage, int endPage)
+{
+	int idxRow = 0;
+	int idxCol = 0;
+	float stepPage = (endPage - startPage) / (float)(endIdx - startIdx);
+	float pageNo = startPage;
+	for (idxRow = startIdx + 1; idxRow < endIdx; ++idxRow) {
+		pageNo = pageNo + stepPage;
+		allData[idxRow].push_back(std::to_string((int)round(pageNo)));
+	}
+	return 0;
+}
+
+int IsPageNo(const std::string& pageNo)
+{
+	for (std::string::const_iterator iter = pageNo.cbegin(); iter != pageNo.cend(); ++iter) {
+		if (*iter < '0' || *iter > '9') {
+			return false;
+		}
+	}
+	return true;
+}
+
+int IsPageNoX(const std::string& str)
+{
+	int idx;
+	int len = str.length();
+	for (idx = 0; idx < len; idx++)
+	{
+		if (!std::isdigit(str.c_str()[idx])) {
+			return 0;
+		}
+	}
+	return 0;
+}
+
+int GetPageNo(std::map<int, std::vector<std::string> >& allData, int idxRow)
+{
+	int idxCol = 0;
+	int curPageNo = 0;
+	idxCol = allData[idxRow].size();
+	//
+	if (idxCol == 1 || !IsPageNo(allData[idxRow].at(idxCol - 1))) {
+		return 0;
+	}
+	curPageNo = atoi(allData[idxRow].at(idxCol - 1).c_str());
+	return curPageNo;
+}
+
+int ProcPageNumInMap(std::map<int, std::vector<std::string> >& allData)
+{
+	int idxRow = 0;
+	int idxCol = 0;
+	int curPageNo = 0;
+	int startIdx = 0;
+	int cnt = 0;
+	for (; idxRow < allData.size(); ++idxRow) {
+		curPageNo = GetPageNo(allData, idxRow);
+		if (curPageNo ==  0) {
+			cnt++;
+		}
+		else {
+			if (cnt) {
+				FixPageNumInMap(allData, startIdx, idxRow, GetPageNo(allData, startIdx), curPageNo);
+			}
+			startIdx = idxRow;
 		}
 	}
 	return 0;
@@ -868,28 +1065,29 @@ int MergeLastWord(std::vector<std::string> & line)
 	return 0;
 }
 
-int SplitPageNoFromTxt(const std::string &file)
+
+
+int SplitPageNoFromLineVc(std::vector<std::string>& lineVc)
 {
-    std::string txtFile = file + ".txt";
-    std::map<int, std::vector<std::string> > allData;
-    ProcTxtToMap(txtFile, allData);
+	// MergeLastWord(lineVc);
+	auto iterWord = lineVc.rbegin();
+	if (lineVc.rend() == iterWord) {
+		return 0;
+	}
+	SplitPageNoFromLine(*iterWord);
+	return 0;
+}
+
+int SplitPageNoFromAllData(std::map<int, std::vector<std::string> > &allData)
+{
     for (auto iterLine = allData.begin(); iterLine != allData.end(); ++iterLine) {
-		if (iterLine->first == 259) {
+		if (IsDebugLine(iterLine->first)) {
 			std::cout << "line:" << iterLine->first << std::endl;
 		}
-        MergeLastWord(iterLine->second);
-		auto iterWord = iterLine->second.rbegin();
-        if (iterLine->second.rend() == iterWord) {
-            continue;
-        }
-        for (auto iterCh = iterWord->crbegin(); iterCh != iterWord->crend(); ++iterCh) {
-            if ((*iterCh) < '0' || (*iterCh) > '9') {
-                iterWord->insert(iterCh.base(), 8, MY_TEXT(' '));
-                break;
-            }
-        }
+		SplitPageNoFromLineVc(iterLine->second);
     }
-    WriteMapToTxt(txtFile + ".txt", allData);
+
+
     return 0;
 }
 
@@ -948,28 +1146,17 @@ int GenXmlDoc(const char* docName, int type, const char *title, const char *page
 	return 0;
 }
 
-int IsPageNo(const std::string &pageNo)
+int XmlMain(std::string fname, int pageoffset, std::map<int, std::vector<std::string> >& allData)
 {
-	for (std::string::const_iterator iter = pageNo.cbegin(); iter != pageNo.cend(); ++iter) {
-		if (*iter < '0' || *iter > '9') {
-			return false;
-		}
-	}
-    return true;
-}
 
-int XmlMain(std::string fname, int pageoffset)
-{
-    InitXmlDoc((fname + ".xml").c_str());
 	int idx = 0;
 	int type = 0;
+	std::string xmlFile = (fname + ".xml");
 	std::string pageno = "1";
 	std::string title;
-	std::string file = (fname + ".txt");
-	std::map<int, std::vector<std::string> > allData;
-	ProcTxtToMap(file.c_str(), allData);
 	std::map<int, std::vector<std::string> >::iterator lineIter;
 	std::vector<std::string>::iterator wordIter;
+	InitXmlDoc(xmlFile.c_str());
 	for (lineIter = allData.begin(); allData.end() != lineIter; lineIter++)
 	{
 		for (idx = 0, title = "", wordIter = lineIter->second.begin(); lineIter->second.end() != wordIter; wordIter++) {
@@ -981,7 +1168,7 @@ int XmlMain(std::string fname, int pageoffset)
 		}
 		pageno = std::to_string(atoi(pageno.c_str()) + pageoffset);
 		type = cfg.MatchType(title);
-		GenXmlDoc((fname + ".xml").c_str(), type, title.c_str(), pageno.c_str());
+		GenXmlDoc(xmlFile.c_str(), type, title.c_str(), pageno.c_str());
 	}
 	return 0;
 }
@@ -1207,6 +1394,7 @@ void Useage(std::string exec)
 
 int AddBookMarkMain(const std::string &fileName, size_t startPage)
 {
+	std::map<int, std::vector<std::string> > allData;
 	if (CheckFile(fileName)) {
 		Useage("app");
 		return -1;
@@ -1216,9 +1404,14 @@ int AddBookMarkMain(const std::string &fileName, size_t startPage)
     SetConsoleOutputCP(CP_UTF8);
     // SetConsoleOutputCP(CP_ACP);
 #endif
-    XmlMain(fileName, startPage-1);
+
+	ProcTxtToMap(fileName + ".txt", allData);
+	// SplitPageNoFromAllData(allData);
+	WriteMapToTxt(fileName + "_split.txt", allData);
+	ProcPageNumInMap(allData);
+	WriteMapToTxt(fileName + "_fixpage.txt", allData);
+    XmlMain(fileName, startPage-1, allData);
     SaveBookMark(fileName);
-	SplitPageNoFromTxt(fileName);
     DelBookMark(fileName);
     AddBookMark(fileName);
     return 0;
@@ -1235,18 +1428,29 @@ std::string GetFileName(const std::string& fileName)
 int AppMain(int argc, char* argv[])
 {
     std::string fileName;
-    if (argc != 3)
-    {
-        Useage(argv[0]);
-        return -1;
-    }
-    fileName = GetFileName(std::string(argv[1]));
+	size_t startPage;
+	if (argc == 3) {
+		fileName = GetFileName(std::string(argv[1]));
+		startPage = atoi(argv[2]);
+	}
+	else if (argc == 2) {
+		fileName = GetFileName(std::string(argv[1]));
+		std::cout << "Input Start PageNo:";
+	    std::cin >> startPage;
+	} 
+	else {
+		Useage(argv[0]);
+		return -1;
+	}
+
     if (CheckFile(fileName))
     {
         Useage(argv[0]);
+		std::cout << fileName << "," << startPage << std::endl << "Input fileName:";
+		std::cin >> fileName;
         return -2;
     }
-    return AddBookMarkMain(fileName, atoi(argv[2]));
+    return AddBookMarkMain(fileName, startPage);
 }
 
 int main( int argc, char* argv[] )
@@ -1258,71 +1462,5 @@ int main( int argc, char* argv[] )
     SplitPageNoFromTxt(file_name);
     return AddBookMarkMain(file_name, 15);
 #endif
-    // return PicMain( argc, argv);
-
-	// MergeDoc("a1-without-bookmarks.pdf", "a1-without-bookmarks.pdf", "a1-with-bookmarks.pdf");
-	// MergeDoc("a1-with-bookmarks.pdf", "a1-with-bookmarks.pdf", "two-with-bookmarks.pdf");
-	//MergeDoc("two-with-bookmarks.pdf", "two-with-bookmarks.pdf", "multi-with-bookmarks.pdf", "bookmark.xml");
-    /*
-     * Check if a filename was passed as commandline argument.
-     * If more than 1 argument or no argument is passed,
-     * a help message is displayed and the example application
-     * will quit.
-     */
-
-    /*
-     * All podofo functions will throw an exception in case of an error.
-     *
-     * You should catch the exception to either fix it or report
-     * back to the user.
-     *
-     * All exceptions podofo throws are objects of the class PdfError.
-     * Thats why we simply catch PdfError objects.
-     */
-    try {
-        /*
-         * Call the drawing routing which will create a PDF file
-         * with the filename of the output file as argument.
-         */
-         HelloWorld( argv[1] );
-    } catch( PdfError & eCode ) {
-        /*
-         * We have to check if an error has occurred.
-         * If yes, we return and print an error message
-         * to the commandline.
-         */
-        eCode.PrintErrorMsg();
-        return eCode.GetError();
-    }
-
-
-    try {
-        /**
-         * Free global memory allocated by PoDoFo.
-         * This is normally not necessary as memory
-         * will be free'd when the application terminates.
-         *
-         * If you want to free all memory allocated by
-         * PoDoFo you have to call this method.
-         *
-         * PoDoFo will reallocate the memory if necessary.
-         */
-        PdfEncodingFactory::FreeGlobalEncodingInstances();
-    } catch( PdfError & eCode ) {
-        /*
-         * We have to check if an error has occurred.
-         * If yes, we return and print an error message
-         * to the commandline.
-         */
-        eCode.PrintErrorMsg();
-        return eCode.GetError();
-    }
-
-    /*
-     * The PDF was created sucessfully.
-     */
-    std::cout << std::endl
-              << "Created a PDF file containing the line \"Hello World!\": " << argv[1] << std::endl << std::endl;
-
     return 0;
 }
