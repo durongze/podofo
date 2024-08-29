@@ -233,7 +233,7 @@ goto :eof
         @rem del * /q /s
         @rem cmake .. -G"Visual Studio 16 2019" -A Win64
         @rem cmake --build . --target clean
-        cmake .. -DCMAKE_BUILD_TYPE=%BuildType% -DCMAKE_INSTALL_PREFIX=%ProgramDir%\%ProjName%
+        cmake .. -DCMAKE_BUILD_TYPE=%BuildType% -DCMAKE_INSTALL_PREFIX=%LibHomeDir%\%ProjName%
         cmake --build . -j16  --config %BuildType% --target INSTALL
     popd
     endlocal
@@ -281,16 +281,6 @@ goto :eof
         @rem sc delete %ProjName%
     )
     endlocal
-goto :eof
-
-:get_path_by_file
-    setlocal EnableDelayedExpansion
-    set myfile=%1
-    set mypath=%~dp1
-    set myname=%~n1
-    set myext=%~x1
-    echo !mypath! !myname! !myext!
-    endlocal & set %~2=%mypath%&set %~3=%myname%&set %~4=%myext%
 goto :eof
 
 :SetProjEnv
@@ -381,6 +371,15 @@ goto :eof
     echo .
 goto :eof
 
+:get_path_by_file
+    setlocal ENABLEDELAYEDEXPANSION
+    set myfile=%1
+    set mypath=%~dp1
+    set myname=%~n1
+    set myext=%~x1
+    echo !mypath! !myname! !myext!
+    endlocal & set %~2=%mypath%&set %~3=%myname%&set %~4=%myext%
+goto :eof
 
 :get_dir_by_tar
     setlocal ENABLEDELAYEDEXPANSION
@@ -447,29 +446,71 @@ goto :eof
     endlocal & set %~3=%DstDirWithHome%
 goto :eof
 
-:gen_all_env
+:gen_all_env_by_file
     setlocal ENABLEDELAYEDEXPANSION
-    set tools_dir="%~1"
+    set thridparty_dir="%~1"
     set home_dir="%~2"
     set DstDirWithHome=
-    call :color_text 2f "++++++++++++++gen_all_env++++++++++++++"
-    if not exist %tools_dir% (
-        echo Dir '%tools_dir%' doesn't exist!
+    call :color_text 2f "++++++++++++++gen_all_env_by_file++++++++++++++"
+    if not exist %thridparty_dir% (
+        echo Dir '%thridparty_dir%' doesn't exist!
         goto :eof
     )
-    pushd %tools_dir%
+    pushd %thridparty_dir%
         for /f %%i in ( 'dir /b *.tar.* *.zip' ) do (
             set tar_file=%%i
             call :gen_env_by_file !tar_file! !home_dir! DstDirWithHome
-            set inc=!DstDirWithHome!/include;!inc!
-            set lib=!DstDirWithHome!/lib;!lib!
-            set bin=!DstDirWithHome!/bin;!bin!
-            set CMAKE_INCLUDE_PATH=!DstDirWithHome!/include;!CMAKE_INCLUDE_PATH!
-            set CMAKE_LIBRARY_PATH=!DstDirWithHome!/lib;!CMAKE_LIBRARY_PATH!
-            set CMAKE_MODULE_PATH=!DstDirWithHome!/cmake;!CMAKE_MODULE_PATH!
+            set inc=!DstDirWithHome!\include;!inc!
+            set lib=!DstDirWithHome!\lib;!lib!
+            set bin=!DstDirWithHome!\bin;!bin!
+            set CMAKE_INCLUDE_PATH=!DstDirWithHome!\include;!CMAKE_INCLUDE_PATH!
+            set CMAKE_LIBRARY_PATH=!DstDirWithHome!\lib;!CMAKE_LIBRARY_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\lib\cmake;!CMAKE_MODULE_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
         )
     popd
-    call :color_text 9f "++++++++++++++gen_all_env++++++++++++++"
+    call :color_text 9f "++++++++++++++gen_all_env_by_file++++++++++++++"
+    echo inc:%inc%
+    echo lib:%lib%
+    echo bin:%bin%
+    endlocal & set %~3=%inc% & set %~4=%lib% & set %~5=%bin% & set %~6=%CMAKE_INCLUDE_PATH% & set %~7=%CMAKE_LIBRARY_PATH% & set %~8=%CMAKE_MODULE_PATH%
+goto :eof
+
+:gen_env_by_dir
+    setlocal ENABLEDELAYEDEXPANSION
+    set FileDir=%~1
+    set HomeDir=%~2
+    set DstDirWithHome=%3
+
+    call :color_text 9f "++++++++++++++gen_env_by_dir++++++++++++++"
+    set DstDirWithHome=%HomeDir%\%FileDir%
+    echo %0 %zip_file% %DstDirWithHome%
+    endlocal & set %~3=%DstDirWithHome%
+goto :eof
+
+:gen_all_env_by_dir
+    setlocal ENABLEDELAYEDEXPANSION
+    set thridparty_dir="%~1"
+    set home_dir="%~2"
+    set DstDirWithHome=
+    call :color_text 2f "++++++++++++++gen_all_env_by_dir++++++++++++++"
+    if not exist %thridparty_dir% (
+        echo Dir '%thridparty_dir%' doesn't exist!
+        goto :eof
+    )
+    pushd %thridparty_dir%
+        for /f %%i in ( 'dir /b /ad ' ) do (
+            set soft_dir=%%i
+            call :gen_env_by_dir !soft_dir! !home_dir! DstDirWithHome
+            set inc=!DstDirWithHome!\include;!inc!
+            set lib=!DstDirWithHome!\lib;!lib!
+            set bin=!DstDirWithHome!\bin;!bin!
+            set CMAKE_INCLUDE_PATH=!DstDirWithHome!\include;!CMAKE_INCLUDE_PATH!
+            set CMAKE_LIBRARY_PATH=!DstDirWithHome!\lib;!CMAKE_LIBRARY_PATH!
+            set CMAKE_MODULE_PATH=!DstDirWithHome!\cmake;!CMAKE_MODULE_PATH!
+        )
+    popd
+    call :color_text 9f "++++++++++++++gen_all_env_by_dir++++++++++++++"
     echo inc:%inc%
     echo lib:%lib%
     echo bin:%bin%
