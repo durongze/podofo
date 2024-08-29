@@ -4,32 +4,53 @@ project (lua VERSION 0.1.0)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu99 -O2 -Wall -Wextra -DLUA_COMPAT_5_3 -DLUA_USE_LINUX")
 
 file(GLOB_RECURSE LUA_SRCS_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
-file(GLOB_RECURSE LUA_HDRS ${CMAKE_SOURCE_DIR}/src/*.h)
-list(REMOVE_ITEM LUA_SRCS_LIST src/lua.c src/luac.c )
+file(GLOB_RECURSE LUA_HDRS_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_SOURCE_DIR}/src/*.h"        )
+list(REMOVE_ITEM  LUA_SRCS_LIST          src/lua.c                    src/luac.c                          )
 
-add_library(lua_static STATIC ${LUA_SRCS_LIST})
-add_library(lua_shared SHARED ${LUA_SRCS_LIST})
+include_directories(include)
 
-set_target_properties(lua_shared PROPERTIES PUBLIC_HEADER "${LUA_HDRS}")
+set                       (LUA_STATIC      lua_static)
+add_library               (${LUA_STATIC}   STATIC     ${LUA_SRCS_LIST}                            )
+target_include_directories(${LUA_STATIC}   PRIVATE    ${LUA_INC_DIR}          ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${LUA_STATIC}   PRIVATE    ${LUA_SRC_DIR}          ${ZLIB_LIBRARY_DIRS})
+target_link_libraries     (${LUA_STATIC}   PRIVATE                            ${ZLIB_LIBRARIES}   )
+target_compile_definitions(${LUA_STATIC}   PRIVATE     WIN32   _WINDOWS       _DEBUG              )
+#target_link_options       (${LUA_STATIC}   PRIVATE   "/SUBSYSTEM:WINDOWS"    "/ENTRY:wWinMainCRTStartup"  )
+set_target_properties     (${LUA_STATIC}   PROPERTIES  CLEAN_DIRECT_OUTPUT 1  OUTPUT_NAME "liblua_static"  )
+set_target_properties     (${LUA_STATIC}   PROPERTIES  PUBLIC_HEADER          "${LUA_HDRS_LIST}"  )
 
-SET_TARGET_PROPERTIES(lua_static PROPERTIES
-    CLEAN_DIRECT_OUTPUT 1
-    OUTPUT_NAME "liblua"
-    )
-SET_TARGET_PROPERTIES(lua_shared PROPERTIES
-    CLEAN_DIRECT_OUTPUT 1
-    OUTPUT_NAME "liblua"
-    )
+set                       (LUA_SHARED      lua_shared)
+add_library               (${LUA_SHARED}   SHARED     ${LUA_SRCS_LIST}                            )
+target_include_directories(${LUA_SHARED}   PRIVATE    ${LUA_INC_DIR}          ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${LUA_SHARED}   PRIVATE    ${LUA_SRC_DIR}          ${ZLIB_LIBRARY_DIRS})
+target_link_libraries     (${LUA_SHARED}   PRIVATE                            ${ZLIB_LIBRARIES}   ) 
+target_compile_definitions(${LUA_SHARED}   PRIVATE     WIN32   _WINDOWS       _DEBUG              )
+#target_link_options       (${LUA_SHARED}   PRIVATE    "/SUBSYSTEM:WINDOWS"    "/ENTRY:wWinMainCRTStartup"     )
+set_target_properties     (${LUA_SHARED}   PROPERTIES  CLEAN_DIRECT_OUTPUT 1  OUTPUT_NAME "libsqlite_shared"  )
+set_target_properties     (${LUA_SHARED}   PROPERTIES  PUBLIC_HEADER          "${LUA_HDRS_LIST}"  )
 
-add_executable(lua ${LUA_SRCS_LIST} "src/lua.c")
-add_executable(luac ${LUA_SRCS_LIST} "src/luac.c")
+set                       (LUAR_APP        luar)
+add_executable            (${LUAR_APP}                ${LUA_SRCS_LIST}        "src/lua.c"         )
+target_include_directories(${LUAR_APP}     PRIVATE    ${LUA_INC_DIR}          ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${LUAR_APP}     PRIVATE    ${LUA_SRC_DIR}          ${ZLIB_LIBRARY_DIRS})
+target_link_libraries     (${LUAR_APP}     PRIVATE                            ${ZLIB_LIBRARIES}   )
+target_compile_definitions(${LUAR_APP}     PRIVATE    WIN32     _WINDOWS      _DEBUG    _UNICODE     UNICODE)
+#target_link_options       (${LUAR_APP}     PRIVATE    "/SUBSYSTEM:WINDOWS"    "/ENTRY:wWinMainCRTStartup")
+
+set                       (LUAC_APP        luac)
+add_executable            (${LUAC_APP}                ${LUA_SRCS_LIST}        "src/luac.c"        )
+target_include_directories(${LUAC_APP}     PRIVATE    ${LUA_INC_DIR}          ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${LUAC_APP}     PRIVATE    ${LUA_SRC_DIR}          ${ZLIB_LIBRARY_DIRS})
+target_link_libraries     (${LUAC_APP}     PRIVATE                            ${ZLIB_LIBRARIES}   )
+target_compile_definitions(${LUAC_APP}     PRIVATE    WIN32     _WINDOWS      _DEBUG    _UNICODE     UNICODE)
+#target_link_options       (${LUAC_APP}     PRIVATE    "/SUBSYSTEM:WINDOWS"    "/ENTRY:wWinMainCRTStartup")
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    target_link_libraries(lua PRIVATE m dl)
-    target_link_libraries(luac PRIVATE m dl)
+    target_link_libraries(${LUAR_APP} PRIVATE m dl)
+    target_link_libraries(${LUAC_APP} PRIVATE m dl)
 endif()
 
-SET(install_targets lua luac lua_static lua_shared)
+SET(install_targets ${LUA_STATIC}    ${LUA_SHARED}    ${LUAR_APP}    ${LUAC_APP} )
 SET(install_hdr_dir include)
 
 INSTALL(TARGETS ${install_targets}
@@ -39,5 +60,5 @@ INSTALL(TARGETS ${install_targets}
         PUBLIC_HEADER DESTINATION ${install_hdr_dir}
        )
 
-#install(FILES ${LUA_HDRS} DESTINATION ${install_hdr_dir})
-install(DIRECTORY "inc_sub_dir" DESTINATION ${install_hdr_dir} FILES_MATCHING PATTERN "*.h")
+install(FILES      ${LUA_HDRS_LIST}    DESTINATION ${install_hdr_dir})
+install(DIRECTORY  "inc_sub_dir"       DESTINATION ${install_hdr_dir} FILES_MATCHING PATTERN "*.h")
