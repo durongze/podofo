@@ -1,36 +1,58 @@
 cmake_minimum_required(VERSION 3.14)
 project (sqlite VERSION 0.1.0)
 
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu99 -O2 -Wall -Wextra ")
 
-file(GLOB_RECURSE SQLITE_SRCS_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.c)
-#list(REMOVE_ITEM SQLITE_SRCS_LIST )
+file(GLOB_RECURSE SQLITE_SRCS_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.*)
+file(GLOB_RECURSE SQLITE_HDRS_LIST RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/*.h)
+list(REMOVE_ITEM SQLITE_SRCS_LIST shell.c)
 
-add_library(SQLITE_static STATIC ${SQLITE_SRCS_LIST})
-add_library(SQLITE_shared SHARED ${SQLITE_SRCS_LIST})
+include_directories(include)
 
-set_target_properties(SQLITE_shared PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/sqlite3.h)
+set(SQLITE_STATIC SQLITE_static)
+add_library               (${SQLITE_STATIC} STATIC     ${SQLITE_SRCS_LIST}                    )
+target_include_directories(${SQLITE_STATIC} PRIVATE    ${SQLITE_INC_DIR}  ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${SQLITE_STATIC} PRIVATE    ${SQLITE_SRC_DIR}  ${ZLIB_LIBRARY_DIRS})
+#target_link_libraries     (${SQLITE_STATIC} PRIVATE                       ${ZLIB_LIBRARIES}  )
+target_compile_definitions(${SQLITE_STATIC} PRIVATE     WIN32   _WINDOWS   _DEBUG              )
+#target_link_options       (${SQLITE_STATIC} PRIVATE   "/SUBSYSTEM:WINDOWS" "/ENTRY:wWinMainCRTStartup")
+set_target_properties     (${SQLITE_STATIC} PROPERTIES  CLEAN_DIRECT_OUTPUT 1    OUTPUT_NAME "libsqlite_static"  )
+set_target_properties     (${SQLITE_STATIC} PROPERTIES  PUBLIC_HEADER       "${SQLITE_HDRS_LIST}")
 
-SET_TARGET_PROPERTIES(SQLITE_static PROPERTIES
-    CLEAN_DIRECT_OUTPUT 1
-    OUTPUT_NAME "libsqlite"
-    )
-SET_TARGET_PROPERTIES(SQLITE_shared PROPERTIES
-    CLEAN_DIRECT_OUTPUT 1
-    OUTPUT_NAME "libsqlite"
-    )
+set(SQLITE_SHARED SQLITE_shared)
+add_library               (${SQLITE_SHARED} SHARED  ${SQLITE_SRCS_LIST})
+target_include_directories(${SQLITE_SHARED} PRIVATE ${SQLITE_INC_DIR}   ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${SQLITE_SHARED} PRIVATE ${SQLITE_SRC_DIR}   ${ZLIB_LIBRARY_DIRS})
+target_link_libraries     (${SQLITE_SHARED} PRIVATE                     ${ZLIB_LIBRARIES}   ) 
+target_compile_definitions(${SQLITE_SHARED} PRIVATE WIN32   _WINDOWS   _DEBUG              )
+#target_link_options       (${SQLITE_SHARED} PRIVATE   "/SUBSYSTEM:WINDOWS" "/ENTRY:wWinMainCRTStartup")
+set_target_properties     (${SQLITE_SHARED} PROPERTIES  CLEAN_DIRECT_OUTPUT 1    OUTPUT_NAME "libsqlite_shared"  )
+set_target_properties     (${SQLITE_SHARED} PROPERTIES  PUBLIC_HEADER       "${SQLITE_HDRS_LIST}")
 
-add_executable(sqlite3 ${SQLITE_SRCS_LIST} "shell.c")
+set(SQLITE_APP  sqlite3)
+add_executable            (${SQLITE_APP} ${SQLITE_SRCS_LIST} "shell.c")
+target_include_directories(${SQLITE_APP} PRIVATE ${SQLITE_INC_DIR}  ${ZLIB_INCLUDE_DIRS})
+target_link_directories   (${SQLITE_APP} PRIVATE ${SQLITE_SRC_DIR}  ${ZLIB_LIBRARY_DIRS})
+target_link_libraries     (${SQLITE_APP} PRIVATE                    ${ZLIB_LIBRARIES}  )
+#target_link_options       (${SQLITE_APP} PRIVATE "/SUBSYSTEM:WINDOWS" "/ENTRY:wWinMainCRTStartup")
+#target_compile_definitions(${SQLITE_APP} PRIVATE WIN32     _WINDOWS    _DEBUG    _UNICODE     UNICODE)
+
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
     target_link_libraries(sqlite3 PRIVATE m dl pthread)
 endif()
 
-SET(install_targets SQLITE_static SQLITE_shared)
+SET(install_targets ${SQLITE_STATIC} ${SQLITE_SHARED} ${SQLITE_APP})
+SET(install_hdr_dir include)
 
 INSTALL(TARGETS ${install_targets}
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-        PUBLIC_HEADER DESTINATION include
+        PUBLIC_HEADER DESTINATION ${install_hdr_dir}
        )
+
+install(FILES     ${SQLITE_HDRS_LIST}   DESTINATION ${install_hdr_dir})
+install(DIRECTORY "inc_sub_dir"         DESTINATION ${install_hdr_dir} FILES_MATCHING PATTERN "*.h")
