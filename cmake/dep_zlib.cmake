@@ -14,11 +14,13 @@ if(NOT TARGET zlib)
 endif()
 
 set(ZLIB_ROOT_DIR     ${${LIBNAME}_SRC_DIR})
-set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT_DIR} ${ZLIB_ROOT_DIR}/include)
-set(ZLIB_LIBRARY_DIRS ${ZLIB_ROOT_DIR} ${ZLIB_ROOT_DIR}/lib    )
 
-include_directories(${ZLIB_INCLUDE_DIRS}   ${${LIBNAME}_BIN_DIR}/     ${${LIBNAME}_BIN_DIR}/include)
-link_directories   (${ZLIB_LIBRARY_DIRS}   ${${LIBNAME}_BIN_DIR}/     ${${LIBNAME}_BIN_DIR}/lib)
+set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT_DIR}     ${ZLIB_ROOT_DIR}/include  ${${LIBNAME}_BIN_DIR}/     ${${LIBNAME}_BIN_DIR}/include  )
+set(ZLIB_LIBRARY_DIRS ${ZLIB_ROOT_DIR}     ${ZLIB_ROOT_DIR}/lib      ${${LIBNAME}_BIN_DIR}/     ${${LIBNAME}_BIN_DIR}/lib      ${${LIBNAME}_BIN_DIR}/Debug)
 
 set(ZLIB_LIBRARY   $<TARGET_OBJECTS:zlib>)
 set(ZLIB_LIBRARIES $<TARGET_OBJECTS:zlib>)
+
+include_directories(${ZLIB_INCLUDE_DIRS}  )
+link_libraries     (${ZLIB_LIBRARY_DIRS}  )
+
