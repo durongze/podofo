@@ -5,8 +5,8 @@ if(NOT TARGET png)
     set(ALL_LIB_SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty)
     set(ALL_LIB_BIN_DIR ${CMAKE_BINARY_DIR}/thirdparty)
 
-    set(${LIBNAME}_SRC_DIR ${ALL_LIB_SRC_DIR}/${LIBNAME})
-    set(${LIBNAME}_BIN_DIR ${ALL_LIB_BIN_DIR}/${LIBNAME})
+    set(${LIBNAME}_SRC_DIR ${ALL_LIB_SRC_DIR}/${LIB_DIR_NAME})
+    set(${LIBNAME}_BIN_DIR ${ALL_LIB_BIN_DIR}/${LIB_DIR_NAME})
 
     message("${LIBNAME}_SRC_DIR:${${LIBNAME}_SRC_DIR}")
     message("${LIBNAME}_BIN_DIR:${${LIBNAME}_BIN_DIR}")
