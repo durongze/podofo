@@ -1,3 +1,5 @@
+set(LUA_DEP_DEFS      LUA_STATIC)
+
 if(NOT TARGET lua)
   set(LIBNAME lua)
 endif()
@@ -16,7 +18,9 @@ else()
 endif()
 
 set(LUA_ROOT_DIR     ${ALL_LIB_HOME_DIR}/${LIBNAME})
+
 set(LUA_INCLUDE_DIRS ${LUA_ROOT_DIR}/include)
 set(LUA_LIBRARY_DIRS ${LUA_ROOT_DIR}/lib)
+
 set(LUA_LIBRARY      LUA_static)
 set(LUA_LIBRARIES    LUA_static)

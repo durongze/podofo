@@ -1,5 +1,6 @@
-if(NOT TARGET png)
-  set(LIBNAME png)
+if(NOT TARGET tiff)
+    set(LIBNAME       tiff)
+    set(LIB_DIR_NAME  tiff-4.4.0)
 endif()
 
 if("$ENV{HomeDir}" STREQUAL "")
@@ -15,10 +16,13 @@ else()
     set(ALL_LIB_HOME_DIR "$ENV{HomeDir}")
 endif()
 
-set(PNG_ROOT_DIR     ${ALL_LIB_HOME_DIR}/${LIBNAME})
+set(TIFF_ROOT_DIR     ${ALL_LIB_HOME_DIR}/${LIB_DIR_NAME})
 
-set(PNG_INCLUDE_DIRS ${PNG_ROOT_DIR}/include)
-set(PNG_LIBRARY_DIRS ${PNG_ROOT_DIR}/lib)
+set(TIFF_INCLUDE_DIRS ${TIFF_ROOT_DIR}/include)
+set(TIFF_LIBRARY_DIRS ${TIFF_ROOT_DIR}/lib)
 
-set(PNG_LIBRARY      LIBPNG_static)
-set(PNG_LIBRARIES    LIBPNG_static)
+set(TIFF_LIBRARY      tiff)
+set(TIFF_LIBRARIES    tiff)
+
+include_directories(${TIFF_INCLUDE_DIRS})
+link_directories   (${TIFF_LIBRARY_DIRS})

@@ -16,7 +16,9 @@ else()
 endif()
 
 set(LIBJPEG_ROOT_DIR     ${ALL_LIB_HOME_DIR}/${LIBNAME})
+
 set(LIBJPEG_INCLUDE_DIRS ${LIBJPEG_ROOT_DIR}/include)
 set(LIBJPEG_LIBRARY_DIRS ${LIBJPEG_ROOT_DIR}/lib)
+
 set(LIBJPEG_LIBRARY      LibJpeg_static)
 set(LIBJPEG_LIBRARIES    LibJpeg_static)

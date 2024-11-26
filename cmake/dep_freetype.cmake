@@ -1,11 +1,17 @@
+#FindFREETYPE.cmake:FIND_PACKAGE_HANDLE_STANDARD_ARGS(FREETYPE REQUIRED_VARS FREETYPE_LIBRARY FREETYPE_INCLUDE_DIR VERSION_VAR FREETYPE_VERSION HANDLE_COMPONENTS) 
 if(NOT TARGET freetype)
-    set(LIBNAME freetype-2.12.1)
+    set(LIBNAME      freetype)
+    set(LIB_DIR_NAME freetype-2.12.1)
+
     set(ALL_LIB_SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/../thirdparty)
     set(ALL_LIB_BIN_DIR ${CMAKE_BINARY_DIR}/thirdparty)
-    set(${LIBNAME}_SRC_DIR ${ALL_LIB_SRC_DIR}/${LIBNAME})
-    set(${LIBNAME}_BIN_DIR ${ALL_LIB_BIN_DIR}/${LIBNAME})
+
+    set(${LIBNAME}_SRC_DIR ${ALL_LIB_SRC_DIR}/${LIB_DIR_NAME})
+    set(${LIBNAME}_BIN_DIR ${ALL_LIB_BIN_DIR}/${LIB_DIR_NAME})
+
     message("${LIBNAME}_SRC_DIR:${${LIBNAME}_SRC_DIR}")
     message("${LIBNAME}_BIN_DIR:${${LIBNAME}_BIN_DIR}")
+
     if(CMAKE_SYSTEM_NAME MATCHES "Linux")
         add_compile_definitions(DYZ)
     endif()
@@ -13,11 +19,12 @@ if(NOT TARGET freetype)
 endif()
 
 set(FREETYPE_ROOT_DIR     ${${LIBNAME}_SRC_DIR})
-set(FREETYPE_INCLUDE_DIRS ${FREETYPE_ROOT_DIR} ${FREETYPE_ROOT_DIR}/include)
-set(FREETYPE_LIBRARY_DIRS ${FREETYPE_ROOT_DIR} ${FREETYPE_ROOT_DIR}/lib    )
 
-include_directories(${FREETYPE_INCLUDE_DIRS}   ${${LIBNAME}_BIN_DIR}/     ${${LIBNAME}_BIN_DIR}/include)
-link_directories   (${FREETYPE_LIBRARY_DIRS}   ${${LIBNAME}_BIN_DIR}/     ${${LIBNAME}_BIN_DIR}/lib)
+set(FREETYPE_INCLUDE_DIRS ${FREETYPE_ROOT_DIR}   ${FREETYPE_ROOT_DIR}/src   ${FREETYPE_ROOT_DIR}/include  ${${LIBNAME}_BIN_DIR}/     ${${LIBNAME}_BIN_DIR}/include  )
+set(FREETYPE_LIBRARY_DIRS ${FREETYPE_ROOT_DIR}   ${FREETYPE_ROOT_DIR}/lib   ${${LIBNAME}_BIN_DIR}/        ${${LIBNAME}_BIN_DIR}/lib  ${${LIBNAME}_BIN_DIR}/Debug)
 
-set(FREETYPE_LIBRARY   $<TARGET_OBJECTS:freetype>)
+set(FREETYPE_LIBRARY   $<TARGET_OBJECTS:freetype>)   # freetyped
 set(FREETYPE_LIBRARIES $<TARGET_OBJECTS:freetype>)
+
+include_directories(${FREETYPE_INCLUDE_DIRS}  )
+link_directories   (${FREETYPE_LIBRARY_DIRS}  )
