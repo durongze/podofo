@@ -1,3 +1,5 @@
+set (FREETYPE_DEP_DEFS    DLL_IMPORT) # dll
+
 if(NOT TARGET freetype)
     set(LIBNAME      freetype)
     set(LIB_DIR_NAME freetype-2.12.1)

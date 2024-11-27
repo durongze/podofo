@@ -26,6 +26,6 @@ set(ZLIB_LIBRARY_DIRS ${ZLIB_ROOT_DIR}   ${ZLIB_ROOT_DIR}/lib   ${${LIBNAME}_BIN
 set(ZLIB_LIBRARY   $<TARGET_OBJECTS:zlib>)
 set(ZLIB_LIBRARIES $<TARGET_OBJECTS:zlib>)
 
-include_directories(${ZLIB_INCLUDE_DIRS}  )
-link_directories   (${ZLIB_LIBRARY_DIRS}  )
+include_directories(${ZLIB_INCLUDE_DIRS})
+link_directories   (${ZLIB_LIBRARY_DIRS})
 

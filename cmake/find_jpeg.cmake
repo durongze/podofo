@@ -1,6 +1,6 @@
-if(NOT TARGET zlib)
-    set(LIBNAME      zlib)
-    set(LIB_DIR_NAME zlib-1.2.12)
+if(NOT TARGET jpeg)
+    set(LIBNAME      jpeg)
+    set(LIB_DIR_NAME jpeg-9e)
 endif()
 
 if("$ENV{HomeDir}" STREQUAL "")
@@ -16,15 +16,14 @@ else()
     set(ALL_LIB_HOME_DIR "$ENV{HomeDir}")
 endif()
 
-set(ZLIB_ROOT_DIR     ${ALL_LIB_HOME_DIR}/${LIB_DIR_NAME})
+set(JPEG_ROOT_DIR     ${ALL_LIB_HOME_DIR}/${LIB_DIR_NAME})
 
-set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT_DIR}/include)
-set(ZLIB_LIBRARY_DIRS ${ZLIB_ROOT_DIR}/lib)
+set(JPEG_INCLUDE_DIRS ${JPEG_ROOT_DIR}/include)
+set(JPEG_LIBRARY_DIRS ${JPEG_ROOT_DIR}/lib)
 
-set(ZLIB_LIBRARY      zlibstaticd)  # zlibstatic  zlibstaticd
-set(ZLIB_LIBRARIES    zlibstaticd)
+set(JPEG_LIBRARY      libjpeg)
+set(JPEG_LIBRARIES    libjpeg)
 
-include_directories(${ZLIB_INCLUDE_DIRS})
-link_directories   (${ZLIB_LIBRARY_DIRS})
+include_directories(${JPEG_INCLUDE_DIRS})
+link_directories   (${JPEG_LIBRARY_DIRS})
 
-message("ZLIB_LIBRARY_DIRS = ${ZLIB_LIBRARY_DIRS} ") 
