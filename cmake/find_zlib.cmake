@@ -21,7 +21,7 @@ set(ZLIB_ROOT_DIR     ${ALL_LIB_HOME_DIR}/${LIB_DIR_NAME})
 set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT_DIR}/include)
 set(ZLIB_LIBRARY_DIRS ${ZLIB_ROOT_DIR}/lib)
 
-set(ZLIB_LIBRARY      zlibstaticd)  # zlibstatic  zlibstaticd
+set(ZLIB_LIBRARY      zlibstaticd)  # zlibstatic  zlibstaticd  zlib_static
 set(ZLIB_LIBRARIES    zlibstaticd)
 
 include_directories(${ZLIB_INCLUDE_DIRS})

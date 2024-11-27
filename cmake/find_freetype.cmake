@@ -23,7 +23,7 @@ set(FREETYPE_ROOT_DIR     ${ALL_LIB_HOME_DIR}/${LIB_DIR_NAME})
 set(FREETYPE_INCLUDE_DIRS ${FREETYPE_ROOT_DIR}/include   ${FREETYPE_ROOT_DIR}/include/freetype2)
 set(FREETYPE_LIBRARY_DIRS ${FREETYPE_ROOT_DIR}/lib)
 
-set(FREETYPE_LIBRARY      freetype)
+set(FREETYPE_LIBRARY      freetype)  # freetype_static   freetyped
 set(FREETYPE_LIBRARIES    freetype)
 
 message("FREETYPE_INCLUDE_DIRS:${FREETYPE_INCLUDE_DIRS}")

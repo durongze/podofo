@@ -21,7 +21,7 @@ set(HARFBUZZ_ROOT_DIR     ${ALL_LIB_HOME_DIR}/${LIB_DIR_NAME})
 set(HARFBUZZ_INCLUDE_DIRS ${HARFBUZZ_ROOT_DIR}/include   ${HARFBUZZ_ROOT_DIR}/include/harfbuzz)
 set(HARFBUZZ_LIBRARY_DIRS ${HARFBUZZ_ROOT_DIR}/lib)
 
-set(HARFBUZZ_LIBRARY      harfbuzz   harfbuzz-subset  )
+set(HARFBUZZ_LIBRARY      harfbuzz   harfbuzz-subset  )  # harfbuzz_static     harfbuzz   harfbuzz-subset
 set(HARFBUZZ_LIBRARIES    harfbuzz   harfbuzz-subset  )
 
 include_directories(${HARFBUZZ_INCLUDE_DIRS})
